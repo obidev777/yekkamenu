@@ -1,0 +1,857 @@
+{% extends "base.html" %}
+
+{% block title %}Inicio - {{ config.nombre_restaurante }}{% endblock %}
+
+{% block head %}
+<style>
+    /* Variables de colores y estilos modernos */
+    :root {
+        --primary: #e63946;
+        --primary-dark: #d62839;
+        --secondary: #f1faee;
+        --accent: #a8dadc;
+        --dark: #1d3557;
+        --light: #f8f9fa;
+        --text: #333333;
+        --text-light: #6c757d;
+        --shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        --transition: all 0.3s ease;
+    }
+
+    /* Estilos generales */
+    .section {
+        padding: 5rem 0;
+    }
+
+    .section-title {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .section-title h2 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--dark);
+        margin-bottom: 1rem;
+        position: relative;
+        display: inline-block;
+    }
+
+    .section-title h2::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 3px;
+        background-color: var(--primary);
+    }
+
+    .section-title p {
+        font-size: 1.1rem;
+        color: var(--text-light);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+    }
+
+    .bg-light {
+        background-color: var(--light);
+    }
+
+    /* Botones */
+    .btn {
+        display: inline-block;
+        padding: 0.8rem 1.8rem;
+        background-color: var(--primary);
+        color: white;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: var(--transition);
+        border: 2px solid var(--primary);
+        cursor: pointer;
+        text-align: center;
+    }
+
+    .btn:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-3px);
+        box-shadow: var(--shadow);
+    }
+
+    .btn-outline {
+        background-color: transparent;
+        color: var(--primary);
+    }
+
+    .btn-outline:hover {
+        background-color: var(--primary);
+        color: white;
+    }
+
+    /* Hero Section */
+    .hero {
+        min-height: 90vh;
+        display: flex;
+        align-items: center;
+        background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url("{{ url_for('static', filename='images/hero-bg.jpg') }}");
+        background-size: cover;
+        background-position: center;
+        color: white;
+        position: relative;
+        padding: 2rem 0;
+    }
+
+    .hero-content {
+        max-width: 800px;
+        margin: 0 auto;
+        text-align: center;
+        padding: 0 1.5rem;
+    }
+
+    .hero-content h1 {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        line-height: 1.2;
+    }
+
+    .hero-content p {
+        font-size: 1.2rem;
+        margin-bottom: 2.5rem;
+        line-height: 1.6;
+    }
+
+    .hero-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    /* Menu Header */
+    .menu-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding: 2rem 0;
+    }
+
+    .menu-header h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        color: var(--dark);
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .menu-header p {
+        font-size: 1.2rem;
+        color: var(--text-light);
+        max-width: 600px;
+        margin: 0 auto 2rem;
+    }
+
+    /* Filtros */
+    .menu-filters {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: var(--shadow);
+        margin-top: 2rem;
+    }
+
+    .search-box {
+        position: relative;
+        max-width: 500px;
+        margin: 0 auto 2rem;
+    }
+
+    #search-input {
+        width: 100%;
+        padding: 1rem 1.5rem;
+        border: 2px solid #e9ecef;
+        border-radius: 50px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        padding-right: 60px;
+    }
+
+    #search-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.1);
+    }
+
+    #search-btn {
+        position: absolute;
+        right: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: var(--primary);
+        border: none;
+        color: white;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    #search-btn:hover {
+        background: var(--primary-dark);
+        transform: translateY(-50%) scale(1.05);
+    }
+
+    .category-filters {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.8rem;
+    }
+
+    .category-filter {
+        padding: 0.8rem 1.5rem;
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 50px;
+        text-decoration: none;
+        color: var(--text);
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .category-filter:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        transform: translateY(-2px);
+    }
+
+    .category-filter.active {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+    }
+
+    /* Grid de platos */
+    .platos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    /* Tarjeta de plato */
+    .plato-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        transition: all 0.4s ease;
+        position: relative;
+    }
+
+    .plato-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .plato-image {
+        height: 250px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .plato-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .plato-card:hover .plato-image img {
+        transform: scale(1.1);
+    }
+
+    .plato-category {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: var(--primary);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .plato-info {
+        padding: 1.8rem;
+    }
+
+    .plato-info h3 {
+        font-size: 1.4rem;
+        margin-bottom: 0.8rem;
+        color: var(--dark);
+        font-weight: 700;
+    }
+
+    .plato-description {
+        color: var(--text-light);
+        margin-bottom: 1.2rem;
+        line-height: 1.6;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .plato-price {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--primary);
+        margin-bottom: 1.5rem;
+    }
+
+    .plato-actions {
+        display: flex;
+        gap: 0.8rem;
+    }
+
+    .plato-actions .btn {
+        flex: 1;
+        padding: 0.8rem;
+        font-size: 0.9rem;
+    }
+
+    /* Modal */
+    .modal-content {
+        border-radius: 20px;
+        border: none;
+        overflow: hidden;
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        border-bottom: none;
+        padding: 1.5rem 2rem;
+    }
+
+    .modal-header .btn-close {
+        filter: invert(1);
+        opacity: 0.8;
+    }
+
+    .modal-body {
+        padding: 2rem;
+    }
+
+    .modal-plato-image {
+        height: 300px;
+        border-radius: 15px;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .modal-plato-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .modal-plato-description {
+        font-size: 1.1rem;
+        line-height: 1.7;
+        color: var(--text);
+        margin-bottom: 1.5rem;
+    }
+
+    .modal-plato-price {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--primary);
+        margin-bottom: 1.5rem;
+    }
+
+    .modal-plato-ingredients h6 {
+        font-size: 1.1rem;
+        color: var(--dark);
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .modal-plato-ingredients ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .modal-plato-ingredients li {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f1f1f1;
+        color: var(--text-light);
+    }
+
+    .modal-plato-ingredients li:last-child {
+        border-bottom: none;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #f1f1f1;
+        padding: 1.5rem 2rem;
+    }
+
+    /* Estado vacio */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-light);
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 1.5rem;
+    }
+
+    .empty-state h3 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: var(--text);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .hero-content h1 {
+            font-size: 2.3rem;
+        }
+
+        .menu-header h1 {
+            font-size: 2.2rem;
+        }
+
+        .menu-filters {
+            padding: 1.5rem;
+        }
+
+        .category-filters {
+            gap: 0.5rem;
+        }
+
+        .category-filter {
+            padding: 0.6rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        .platos-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .plato-actions {
+            flex-direction: column;
+        }
+
+        .modal-plato-image {
+            height: 200px;
+        }
+
+        .hero-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .btn {
+            width: 100%;
+            max-width: 250px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .hero-content h1 {
+            font-size: 2rem;
+        }
+
+        .menu-header {
+            padding: 1rem 0;
+        }
+
+        .menu-header h1 {
+            font-size: 1.8rem;
+        }
+
+        .menu-header p {
+            font-size: 1rem;
+        }
+
+        .search-box {
+            margin-bottom: 1.5rem;
+        }
+
+        .section {
+            padding: 3rem 0;
+        }
+    }
+
+    /* Animaciones */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .plato-card {
+        animation: fadeInUp 0.6s ease forwards;
+        opacity: 0;
+    }
+
+    .plato-card:nth-child(1) { animation-delay: 0.1s; }
+    .plato-card:nth-child(2) { animation-delay: 0.2s; }
+    .plato-card:nth-child(3) { animation-delay: 0.3s; }
+    .plato-card:nth-child(4) { animation-delay: 0.4s; }
+    .plato-card:nth-child(5) { animation-delay: 0.5s; }
+    .plato-card:nth-child(6) { animation-delay: 0.6s; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h1>Bienvenido a {{ config.nombre_restaurante }}</h1>
+        <p>Disfruta de los sabores autenticos en cada bocado. Nuestra pasion es servirte la mejor experiencia gastronomica.</p>
+        <div class="hero-buttons">
+            <a href="#menu_platos" class="btn">Ver Menu</a>
+            <a href="#about" class="btn btn-outline">Conocenos</a>
+        </div>
+    </div>
+</section>
+
+<!-- Menu Header -->
+<section  class="section">
+    <div class="container">
+        <div class="menu-header">
+            <h1>Nuestro Menu</h1>
+            <p>Descubre nuestra deliciosa seleccion de platos preparados con ingredientes frescos</p>
+
+            <!-- Filtros -->
+            <div class="menu-filters">
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Buscar platos..." value="{{ search }}">
+                    <button id="search-btn"><i class="fas fa-search"></i></button>
+                </div>
+
+                <div class="category-filters">
+                    <a href="{{ url_for('index', search=search) }}" class="category-filter {% if not categoria_actual %}active{% endif %}">
+                        Todas
+                    </a>
+                    {% for categoria in categorias %}
+                    <a href="" class="category-filter {% if categoria_actual == categoria.id %}active{% endif %}">
+                        {{ categoria.nombre }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Platos -->
+        <div id="menu_platos" class="platos-grid">
+            {% for plato in platos %}
+            <div class="plato-card fade-in">
+                <div class="plato-image">
+                    <img src="{% if plato.imagen %}{{ url_for('uploaded_file', filename=plato.imagen) }}{% else %}{{ url_for('static', filename='images/default-dish.jpg') }}{% endif %}" alt="{{ plato.nombre }}">
+                    {% if plato.categoria_obj %}
+                    <span class="plato-category">{{ plato.categoria_obj.nombre }}</span>
+                    {% endif %}
+                </div>
+                <div class="plato-info">
+                    <h3>{{ plato.nombre }}</h3>
+                    <p class="plato-description">{{ plato.descripcion }}</p>
+                    <div class="plato-price">${{ "%.2f"|format(plato.precio_venta) }}</div>
+                    <div class="plato-actions">
+                        <button class="btn" onclick="addToCart({{ plato.id }})">
+                            <i class="fas fa-plus"></i> Agregar
+                        </button>
+                        <button class="btn btn-outline" data-bs-toggle="modal" data-bs-target="#platoModal{{ plato.id }}">
+                            <i class="fas fa-info"></i> Detalles
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal para detalles del plato -->
+            <div class="modal fade" id="platoModal{{ plato.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">{{ plato.nombre }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="modal-plato-image">
+                                <img src="{% if plato.imagen %}{{ url_for('uploaded_file', filename=plato.imagen) }}{% else %}{{ url_for('static', filename='images/default-dish.jpg') }}{% endif %}" alt="{{ plato.nombre }}">
+                            </div>
+                            <div class="modal-plato-info">
+                                <p class="modal-plato-description">{{ plato.descripcion }}</p>
+                                <div class="modal-plato-price">${{ "%.2f"|format(plato.precio_venta) }}</div>
+                                {% if plato.ingredientes %}
+                                <div class="modal-plato-ingredients">
+                                    <h6>Ingredientes:</h6>
+                                    <ul>
+                                        {% for ingrediente in plato.ingredientes %}
+                                        <li>{{ ingrediente.producto.nombre }} - {{ ingrediente.cantidad }} {{ ingrediente.producto.unidad_medida }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="button" class="btn btn-primary" onclick="addToCart({{ plato.id }})">Agregar al Carrito</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if not platos %}
+        <div class="empty-state">
+            <i class="fas fa-utensils"></i>
+            <h3>No se encontraron platos</h3>
+            <p>Intenta con otros filtros de busqueda</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Busqueda en tiempo real con Fetch
+    document.getElementById('search-input').addEventListener('input', function (e) {
+        // Busqueda en tiempo real con debounce
+        clearTimeout(window.searchTimeout);
+        window.searchTimeout = setTimeout(() => {
+            performSearch();
+        }, 500);
+    });
+
+    document.getElementById('search-btn').addEventListener('click', performSearch);
+
+    // Funcion principal de busqueda con fetch
+    async function performSearch() {
+        const searchTerm = document.getElementById('search-input').value;
+        const urlParams = new URLSearchParams(window.location.search);
+        const categoriaId = urlParams.get('categoria_id');
+
+        // Mostrar loader
+        showLoader();
+
+        try {
+            // Construir URL para la peticion fetch
+            let url = "{{ url_for('index') }}";
+            let params = [];
+
+            if (searchTerm) {
+                params.push('search=' + encodeURIComponent(searchTerm));
+            }
+
+            if (categoriaId) {
+                params.push('categoria_id=' + categoriaId);
+            }
+
+            if (params.length > 0) {
+                url += '?' + params.join('&');
+            }
+
+            // Realizar peticion fetch
+            const response = await fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+
+            // Parsear el HTML de respuesta
+            const html = await response.text();
+
+            // Crear un documento temporal para extraer el contenido
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            // Extraer solo la seccion de platos
+            const platosSection = doc.querySelector('.platos-grid');
+            const emptyState = doc.querySelector('.empty-state');
+
+            // Actualizar el DOM
+            const currentPlatosSection = document.querySelector('.platos-grid');
+            const currentEmptyState = document.querySelector('.empty-state');
+
+            if (platosSection) {
+                currentPlatosSection.innerHTML = platosSection.innerHTML;
+            }
+
+            // Manejar estado vacio
+            if (emptyState && currentEmptyState) {
+                currentEmptyState.innerHTML = emptyState.innerHTML;
+            } else if (emptyState && !currentEmptyState) {
+                currentPlatosSection.insertAdjacentElement('afterend', emptyState);
+            } else if (!emptyState && currentEmptyState) {
+                currentEmptyState.remove();
+            }
+
+            // Actualizar URL en el navegador (sin recargar)
+            updateBrowserUrl(params);
+
+            // Reiniciar animaciones
+            initAnimations();
+
+        } catch (error) {
+            console.error('Error en la busqueda:', error);
+            showError('Error al cargar los resultados');
+        } finally {
+            // Ocultar loader
+            hideLoader();
+        }
+    }
+
+    // Funcion para actualizar la URL del navegador
+    function updateBrowserUrl(params) {
+        let newUrl = "{{ url_for('index') }}";
+        if (params.length > 0) {
+            newUrl += '?' + params.join('&');
+        }
+
+        // Actualizar URL sin recargar
+        window.history.pushState({}, '', newUrl);
+    }
+
+    // Funcion para mostrar loader
+    function showLoader() {
+        // Crear loader si no existe
+        if (!document.querySelector('.search-loader')) {
+            const loader = document.createElement('div');
+            loader.className = 'search-loader';
+            loader.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p style="margin-top: 10px;">Buscando platos...</p>
+                </div>
+            `;
+            document.querySelector('.platos-grid').insertAdjacentElement('beforebegin', loader);
+        }
+
+        // Ocultar contenido actual temporalmente
+        document.querySelector('.platos-grid').style.opacity = '0.5';
+        if (document.querySelector('.empty-state')) {
+            document.querySelector('.empty-state').style.opacity = '0.5';
+        }
+    }
+
+    // Funcion para ocultar loader
+    function hideLoader() {
+        const loader = document.querySelector('.search-loader');
+        if (loader) {
+            loader.remove();
+        }
+
+        // Restaurar opacidad del contenido
+        document.querySelector('.platos-grid').style.opacity = '1';
+        if (document.querySelector('.empty-state')) {
+            document.querySelector('.empty-state').style.opacity = '1';
+        }
+    }
+
+    // Funcion para mostrar error
+    function showError(message) {
+        // Eliminar errores previos
+        const existingError = document.querySelector('.search-error');
+        if (existingError) {
+            existingError.remove();
+        }
+
+        // Crear mensaje de error
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'search-error alert alert-danger';
+        errorDiv.style.margin = '20px 0';
+        errorDiv.textContent = message;
+
+        document.querySelector('.platos-grid').insertAdjacentElement('beforebegin', errorDiv);
+
+        // Auto-eliminar despues de 5 segundos
+        setTimeout(() => {
+            errorDiv.remove();
+        }, 5000);
+    }
+
+    // Funcion para inicializar animaciones
+    function initAnimations() {
+        const fadeElements = document.querySelectorAll('.fade-in');
+
+        const fadeInObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        fadeElements.forEach(element => {
+            fadeInObserver.observe(element);
+        });
+    }
+
+    // Inicializar cuando el DOM este listo
+    document.addEventListener('DOMContentLoaded', function() {
+        initAnimations();
+
+        // Manejar el boton de retroceso del navegador
+        window.addEventListener('popstate', function() {
+            // Recargar la pagina para mantener consistencia
+            window.location.reload();
+        });
+    });
+</script>
+
+<!-- Agregar estilos para el loader y errores -->
+<style>
+    .search-loader {
+        margin: 20px 0;
+    }
+
+    .search-error {
+        margin: 20px 0;
+        border-radius: 10px;
+        padding: 15px;
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .spinner-border {
+        width: 3rem;
+        height: 3rem;
+    }
+</style>
+{% endblock %}

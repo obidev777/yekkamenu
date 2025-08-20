@@ -1,0 +1,28 @@
+<div class="admin-sidebar">
+    <div class="admin-brand">
+        <img src="{% if config.logo %}{{ url_for('uploaded_file', filename=config.logo) }}{% else %}{{ url_for('static', filename='images/logo.png') }}{% endif %}" alt="Logo">
+        
+    </div>
+
+    <ul class="admin-menu">
+        <li><a href="{{ url_for('admin_panel') }}" class="{% if request.endpoint == 'admin_panel' %}active{% endif %}"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a></li>
+        <li><a href="{{ url_for('admin_pedidos') }}" class="{% if request.endpoint == 'admin_pedidos' or request.endpoint == 'ver_pedido' %}active{% endif %}"><i class="fas fa-shopping-cart"></i> <span>Pedidos</span></a></li>
+        <li><a href="{{ url_for('admin_productos') }}" class="{% if request.endpoint == 'admin_productos' or request.endpoint == 'nuevo_producto' or request.endpoint == 'editar_producto' %}active{% endif %}"><i class="fas fa-box"></i> <span>Productos</span></a></li>
+        <li><a href="{{ url_for('admin_platos') }}" class="{% if request.endpoint == 'admin_platos' or request.endpoint == 'nuevo_plato' or request.endpoint == 'editar_plato' %}active{% endif %}"><i class="fas fa-utensils"></i> <span>Platos</span></a></li>
+        <li><a href="{{ url_for('admin_categorias') }}" class="{% if request.endpoint == 'admin_categorias' or request.endpoint == 'nueva_categoria' or request.endpoint == 'editar_categoria' %}active{% endif %}"><i class="fas fa-tags"></i> <span>Categorias</span></a></li>
+        <li><a href="{{ url_for('admin_extras') }}" class="{% if request.endpoint == 'admin_extras' or request.endpoint == 'nuevo_extra' or request.endpoint == 'editar_extra' %}active{% endif %}"><i class="fas fa-plus-circle"></i> <span>Extras</span></a></li>
+        <li><a href="{{ url_for('admin_configuracion') }}" class="{% if request.endpoint == 'admin_configuracion' %}active{% endif %}"><i class="fas fa-cog"></i> <span>Configuracion</span></a></li>
+    </ul>
+
+    <div class="admin-user">
+        <div class="admin-user-info">
+            <div class="admin-user-avatar">
+                {{ session.username[0]|upper }}
+            </div>
+            <div class="admin-user-details">
+                <div class="admin-user-name">{{ session.username }}</div>
+                <div class="admin-user-role">Administrador</div>
+            </div>
+        </div>
+    </div>
+</div>

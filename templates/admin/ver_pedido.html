@@ -1,0 +1,115 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Pedido {{ pedido.codigo }} - Administracion - {{ config.nombre_restaurante }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <!-- Sidebar -->
+    {% include 'admin/sidebar.html' %}
+
+    <!-- Main Content -->
+    <div class="admin-main">
+        <div class="admin-header">
+            <h1 class="admin-title">Pedido: {{ pedido.codigo }}</h1>
+            <div class="admin-actions">
+                <a href="{{ url_for('admin_pedidos') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left"></i> Volver a Pedidos
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="admin-table-container">
+                    <h3>Items del Pedido</h3>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Plato</th>
+                                <th>Cantidad</th>
+                                <th>Precio Unitario</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in pedido.items %}
+                            <tr>
+                                <td>{{ item.plato.nombre }}</td>
+                                <td>{{ item.cantidad }}</td>
+                                <td>${{ "%.2f"|format(item.precio_unitario) }}</td>
+                                <td>${{ "%.2f"|format(item.precio_unitario * item.cantidad) }}</td>
+                            </tr>
+                            {% endfor %}
+
+                            {% if pedido.extras %}
+                            <tr>
+                                <th colspan="3">Extras</th>
+                            </tr>
+                            {% for extra in pedido.extras %}
+                            <tr>
+                                <td>{{ extra.extra.nombre }}</td>
+                                <td>{{ extra.cantidad }}</td>
+                                <td>${{ "%.2f"|format(extra.precio_unitario) }}</td>
+                                <td>${{ "%.2f"|format(extra.precio_unitario * extra.cantidad) }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% endif %}
+
+                            <tr class="table-primary">
+                                <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                <td><strong>${{ "%.2f"|format(pedido.total) }}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="admin-table-container">
+                    <h3>Informacion del Cliente</h3>
+                    <div class="customer-info">
+                        <p><strong>Nombre:</strong> {{ pedido.cliente_nombre }}</p>
+                        <p><strong>Telefono:</strong> {{ pedido.cliente_telefono }}</p>
+                        <p><strong>Direccion:</strong> {{ pedido.cliente_direccion }}</p>
+                        {% if pedido.cliente_ubicacion %}
+                        <p><strong>Ubicacion:</strong> {{ pedido.cliente_ubicacion }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="admin-table-container mt-4">
+                    <h3>Cambiar Estado</h3>
+                    <form method="POST" action="{{ url_for('cambiar_estado_pedido', pedido_id=pedido.id) }}">
+                        <div class="form-group">
+                            <select class="form-select" name="estado">
+                                <option value="pendiente" {% if pedido.estado=='pendiente' %}selected{% endif %}>Pendiente</option>
+                                <option value="confirmado" {% if pedido.estado=='confirmado' %}selected{% endif %}>Confirmado</option>
+                                <option value="preparando" {% if pedido.estado=='preparando' %}selected{% endif %}>Preparando</option>
+                                <option value="enviado" {% if pedido.estado=='enviado' %}selected{% endif %}>Enviado</option>
+                                <option value="entregado" {% if pedido.estado=='entregado' %}selected{% endif %}>Entregado</option>
+                                <option value="cancelado" {% if pedido.estado=='cancelado' %}selected{% endif %}>Cancelado</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 mt-2">Actualizar Estado</button>
+                    </form>
+                </div>
+
+                <div class="admin-table-container mt-4">
+                    <h3>Informacion del Pedido</h3>
+                    <div class="order-info">
+                        <p><strong>Fecha:</strong> {{ pedido.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</p>
+                        <p>
+                            <strong>Estado actual:</strong>
+                            <span class="badge status-{{ pedido.estado }}">{{ pedido.estado|title }}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,242 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ 'Editar' if plato else 'Nuevo' }} Plato - Administracion - {{ config.nombre_restaurante }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <!-- Sidebar -->
+    {% include 'admin/sidebar.html' %}
+
+    <!-- Main Content -->
+    <div class="admin-main">
+        <div class="admin-header">
+            <h1 class="admin-title">{{ 'Editar' if plato else 'Nuevo' }} Plato</h1>
+            <div class="admin-actions">
+                <a href="{{ url_for('admin_platos') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left"></i> Volver a Platos
+                </a>
+            </div>
+        </div>
+
+        <div class="admin-form-container">
+            <form method="POST" action="{{ url_for('editar_plato', plato_id=plato.id) if plato else url_for('nuevo_plato') }}" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nombre" class="form-label">Nombre *</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" value="{{ plato.nombre if plato else '' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="precio_venta" class="form-label">Precio de Venta *</label>
+                        <input type="number" step="0.01" class="form-control" id="precio_venta" name="precio_venta" value="{{ plato.precio_venta if plato else '' }}" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="categoria_id" class="form-label">Categoria *</label>
+                        <select class="form-select" id="categoria_id" name="categoria_id" required>
+                            <option value="">Seleccionar categoria...</option>
+                            {% for categoria in categorias %}
+                            <option value="{{ categoria.id }}" {% if plato and plato.categoria_id==categoria.id %}selected{% endif %}>{{ categoria.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="imagen" class="form-label">Imagen</label>
+                        <input type="file" class="form-control" id="imagen" name="imagen" accept="image/*">
+                        {% if plato and plato.imagen %}
+                        <div class="image-preview mt-2">
+                            <img src="{{ url_for('uploaded_file', filename=plato.imagen) }}" alt="Preview" style="max-width: 200px;">
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="descripcion" class="form-label">Descripcion</label>
+                    <textarea class="form-control" id="descripcion" name="descripcion" rows="3">{{ plato.descripcion if plato else '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="activo" name="activo" {% if not plato or plato.activo %}checked{% endif %}>
+                        <label class="form-check-label" for="activo">
+                            Plato activo
+                        </label>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h4>Ingredientes</h4>
+                <div id="ingredientes-container">
+                    {% if plato and plato.ingredientes %}
+                    {% for ingrediente in plato.ingredientes %}
+                    <div class="ingrediente-item">
+                        <div class="form-group">
+                            <label class="form-label">Producto</label>
+                            <select class="form-select" name="producto_id_{{ loop.index0 }}" required>
+                                <option value="">Seleccionar producto...</option>
+                                {% for producto in productos %}
+                                <option value="{{ producto.id }}" {% if ingrediente.producto_id==producto.id %}selected{% endif %}>{{ producto.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cantidad (Gramos)</label>
+                            <input type="number" step="0.01" class="form-control" name="cantidad_{{ loop.index0 }}" value="{{ ingrediente.cantidad }}" required>
+                        </div>
+                        <button type="button" class="btn btn-danger remove-ingrediente" onclick="removeIngrediente(this)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="ingrediente-item">
+                        <div class="form-group">
+                            <label class="form-label">Producto</label>
+                            <select class="form-select" name="producto_id_0" required>
+                                <option value="">Seleccionar producto...</option>
+                                {% for producto in productos %}
+                                <option value="{{ producto.id }}">{{ producto.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cantidad</label>
+                            <input type="number" step="0.01" class="form-control" name="cantidad_0" required>
+                        </div>
+                        <button type="button" class="btn btn-danger remove-ingrediente" onclick="removeIngrediente(this)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <button type="button" class="btn btn-secondary mt-2" id="add-ingrediente">
+                    <i class="fas fa-plus"></i> Agregar Ingrediente
+                </button>
+
+                <div class="mt-3 p-3 bg-light rounded">
+                    <h5>Calculo de Costos</h5>
+                    <p><strong>Costo estimado:</strong> $<span id="costo-plato">0.00</span></p>
+                    <p><strong>Ganancia estimada:</strong> $<span id="ganancia-plato">0.00</span></p>
+                    <button type="button" class="btn btn-sm btn-info" id="calcular-costo-btn">
+                        Calcular Costo
+                    </button>
+                </div>
+
+                <hr>
+
+                <button type="submit" class="btn btn-primary mt-3">{{ 'Actualizar' if plato else 'Crear' }} Plato</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let ingredienteCount = {{ plato.ingredientes|length if plato else 1 }};
+
+    document.getElementById('add-ingrediente').addEventListener('click', function() {
+        const container = document.getElementById('ingredientes-container');
+        const newIngrediente = document.createElement('div');
+        newIngrediente.className = 'ingrediente-item';
+        newIngrediente.innerHTML = `
+            <div class="form-group">
+                <label class="form-label">Producto</label>
+                <select class="form-select" name="producto_id_${ingredienteCount}" required>
+                    <option value="">Seleccionar producto...</option>
+                    {% for producto in productos %}
+                    <option value="{{ producto.id }}">{{ producto.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Cantidad</label>
+                <input type="number" step="0.01" class="form-control" name="cantidad_${ingredienteCount}" onchange="calcular_costo();" required>
+            </div>
+            <button type="button" class="btn btn-danger remove-ingrediente" onclick="removeIngrediente(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        `;
+        container.appendChild(newIngrediente);
+        ingredienteCount++;
+    });
+
+    function removeIngrediente(button) {
+        if (document.querySelectorAll('.ingrediente-item').length > 1) {
+            button.closest('.ingrediente-item').remove();
+        } else {
+            alert('Debe tener al menos un ingrediente');
+        }
+    }
+
+    function calcular_costo() {
+        const ingredientes = [];
+        let i = 0;
+
+        while (true) {
+            const productoSelect = document.querySelector(`[name="producto_id_${i}"]`);
+            const cantidadInput = document.querySelector(`[name="cantidad_${i}"]`);
+
+            if (!productoSelect || !cantidadInput) break;
+
+            if (productoSelect.value && cantidadInput.value) {
+                ingredientes.push({
+                    producto_id: parseInt(productoSelect.value),
+                    cantidad: parseFloat(cantidadInput.value)
+                });
+            }
+
+            i++;
+        }
+
+        if (ingredientes.length === 0) {
+            alert('Agregue al menos un ingrediente');
+            return;
+        }
+
+        fetch('/admin/calcular_costo_plato', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ ingredientes: ingredientes })
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('costo-plato').textContent = data.costo.toFixed(2);
+
+            const precioVenta = parseFloat(document.getElementById('precio_venta').value) || 0;
+            const ganancia = precioVenta - data.costo;
+            document.getElementById('ganancia-plato').textContent = ganancia.toFixed(2);
+
+            if (ganancia < 0) {
+                document.getElementById('ganancia-plato').style.color = 'var(--danger-color)';
+            } else if (ganancia < data.costo * 0.5) {
+                document.getElementById('ganancia-plato').style.color = 'var(--warning-color)';
+            } else {
+                document.getElementById('ganancia-plato').style.color = 'var(--success-color)';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al calcular el costo');
+        });
+    }
+
+    document.getElementById('calcular-costo-btn').addEventListener('click', function() {
+        calcular_costo();
+    });
+
+    calcular_costo();
+</script>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Confirmacion - {{ config.nombre_restaurante }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="confirmation-container text-center">
+            <div class="confirmation-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+
+            <h1>Pedido Confirmado</h1>
+            <p class="lead">Tu pedido ha sido registrado exitosamente</p>
+
+            <div class="confirmation-details">
+                <div class="confirmation-card">
+                    <h3>Detalles del Pedido</h3>
+                    <div class="order-info">
+                        <p><strong>Codigo de Pedido:</strong> {{ pedido.codigo }}</p>
+                        <p><strong>Fecha:</strong> {{ pedido.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</p>
+                        <p><strong>Total:</strong> ${{ "%.2f"|format(pedido.total) }}</p>
+                        <p><strong>Estado:</strong> <span class="status-badge status-{{ pedido.estado }}">{{ pedido.estado|title }}</span></p>
+                    </div>
+
+                    <div class="order-items">
+                        <h4>Items del Pedido</h4>
+                        {% for item in pedido.items %}
+                        <div class="order-item">
+                            <span>{{ item.plato.nombre }} x{{ item.cantidad }}</span>
+                            <span>${{ "%.2f"|format(item.precio_unitario * item.cantidad) }}</span>
+                        </div>
+                        {% endfor %}
+
+                        {% if pedido.extras %}
+                        <h4>Extras</h4>
+                        {% for extra in pedido.extras %}
+                        <div class="order-item">
+                            <span>{{ extra.extra.nombre }} x{{ extra.cantidad }}</span>
+                            <span>${{ "%.2f"|format(extra.precio_unitario * extra.cantidad) }}</span>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+
+                    <div class="customer-info">
+                        <h4>Informacion de Entrega</h4>
+                        <p><strong>Nombre:</strong> {{ pedido.cliente_nombre }}</p>
+                        <p><strong>Telefono:</strong> {{ pedido.cliente_telefono }}</p>
+                        <p><strong>Direccion:</strong> {{ pedido.cliente_direccion }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="confirmation-actions mt-4">
+                <a href="{{ url_for('menu') }}" class="btn btn-primary">Seguir Comprando</a>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-primary">Volver al Inicio</a>
+            </div>
+
+            <div class="confirmation-note mt-4">
+                <p class="text-muted">
+                    <small>
+                        Hemos enviado un mensaje de confirmacion a tu telefono.
+                        Puedes usar el codigo de pedido para hacer seguimiento.
+                    </small>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

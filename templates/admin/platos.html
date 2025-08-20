@@ -1,0 +1,108 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Platos - Administracion - {{ config.nombre_restaurante }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <!-- Sidebar -->
+    {% include 'admin/sidebar.html' %}
+
+    <!-- Main Content -->
+    <div class="admin-main">
+        <div class="admin-header">
+            <h1 class="admin-title">Gestion de Platos</h1>
+            <div class="admin-actions">
+                <a href="{{ url_for('nuevo_plato') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nuevo Plato
+                </a>
+            </div>
+        </div>
+
+        <div class="admin-table-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Imagen</th>
+                        <th>Nombre</th>
+                        <th>Precio Venta</th>
+                        <th>Categoria</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for plato in platos %}
+                    <tr>
+                        <td>
+                            {% if plato.imagen %}
+                            <img src="{{ url_for('uploaded_file', filename=plato.imagen) }}" alt="{{ plato.nombre }}" class="table-image">
+                            {% else %}
+                            <div class="table-image-placeholder">
+                                <i class="fas fa-utensils"></i>
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>{{ plato.nombre }}</td>
+                        <td>${{ "%.2f"|format(plato.precio_venta) }}</td>
+                        <td>
+                            {% if plato.categoria_obj %}
+                            {{ plato.categoria_obj.nombre }}
+                            {% else %}
+                            Sin categoria
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if plato.activo %}
+                            <span class="badge badge-success">Activo</span>
+                            {% else %}
+                            <span class="badge badge-danger">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('editar_plato', plato_id=plato.id) }}" class="btn btn-sm btn-warning" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="{{ url_for('eliminar_plato', plato_id=plato.id) }}" method="POST" style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-danger" title="Eliminar" onclick="return confirm('Estas seguro de eliminar este plato?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center">No hay platos registrados</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+    .table-image {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 5px;
+    }
+
+    .table-image-placeholder {
+        width: 50px;
+        height: 50px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}

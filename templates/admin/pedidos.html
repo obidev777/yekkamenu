@@ -1,0 +1,72 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Pedidos - Administracion - {{ config.nombre_restaurante }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <!-- Sidebar -->
+    {% include 'admin/sidebar.html' %}
+
+    <!-- Main Content -->
+    <div class="admin-main">
+        <div class="admin-header">
+            <h1 class="admin-title">Gestion de Pedidos</h1>
+            <div class="admin-actions">
+                <div class="btn-group">
+                    <a href="{{ url_for('admin_pedidos', estado='pendiente') }}" class="btn btn-outline-primary {% if estado_actual == 'pendiente' %}active{% endif %}">Pendientes</a>
+                    <a href="{{ url_for('admin_pedidos', estado='confirmado') }}" class="btn btn-outline-primary {% if estado_actual == 'confirmado' %}active{% endif %}">Confirmados</a>
+                    <a href="{{ url_for('admin_pedidos', estado='preparando') }}" class="btn btn-outline-primary {% if estado_actual == 'preparando' %}active{% endif %}">Preparando</a>
+                    <a href="{{ url_for('admin_pedidos', estado='enviado') }}" class="btn btn-outline-primary {% if estado_actual == 'enviado' %}active{% endif %}">Enviados</a>
+                    <a href="{{ url_for('admin_pedidos', estado='entregado') }}" class="btn btn-outline-primary {% if estado_actual == 'entregado' %}active{% endif %}">Entregados</a>
+                    <a href="{{ url_for('admin_pedidos', estado='cancelado') }}" class="btn btn-outline-primary {% if estado_actual == 'cancelado' %}active{% endif %}">Cancelados</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-table-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Codigo</th>
+                        <th>Cliente</th>
+                        <th>Telefono</th>
+                        <th>Total</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pedido in pedidos %}
+                    <tr>
+                        <td>{{ pedido.codigo }}</td>
+                        <td>{{ pedido.cliente_nombre }}</td>
+                        <td>{{ pedido.cliente_telefono }}</td>
+                        <td>${{ "%.2f"|format(pedido.total) }}</td>
+                        <td>
+                            <span class="badge status-{{ pedido.estado }}">
+                                {{ pedido.estado|title }}
+                            </span>
+                        </td>
+                        <td>{{ pedido.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>
+                            <a href="{{ url_for('ver_pedido', pedido_id=pedido.id) }}" class="btn btn-sm btn-info" title="Ver detalle">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center">No hay pedidos en este estado</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

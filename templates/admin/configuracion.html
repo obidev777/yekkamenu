@@ -1,0 +1,67 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Configuracion - Administracion - {{ config.nombre_restaurante }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <!-- Sidebar -->
+    {% include 'admin/sidebar.html' %}
+
+    <!-- Main Content -->
+    <div class="admin-main">
+        <div class="admin-header">
+            <h1 class="admin-title">Configuracion del Restaurante</h1>
+        </div>
+
+        <div class="admin-form-container">
+            <form method="POST" action="{{ url_for('admin_configuracion') }}" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nombre_restaurante" class="form-label">Nombre del Restaurante *</label>
+                        <input type="text" class="form-control" id="nombre_restaurante" name="nombre_restaurante" value="{{ config.nombre_restaurante }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="telefono" class="form-label">Telefono *</label>
+                        <input type="text" class="form-control" id="telefono" name="telefono" value="{{ config.telefono }}" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="direccion" class="form-label">Direccion *</label>
+                    <textarea class="form-control" id="direccion" name="direccion" rows="2" required>{{ config.direccion }}</textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="impuesto" class="form-label">Impuesto (%)</label>
+                        <input type="number" step="0.01" class="form-control" id="impuesto" name="impuesto" value="{{ config.impuesto }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="max_extras" class="form-label">Maximo de Extras por Pedido</label>
+                        <input type="number" class="form-control" id="max_extras" name="max_extras" value="{{ config.max_extras }}" min="1" max="10">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="logo" class="form-label">Logo del Restaurante</label>
+                    <input type="file" class="form-control" id="logo" name="logo" accept="image/*">
+                    {% if config.logo %}
+                    <div class="image-preview mt-2">
+                        <img src="{{ url_for('uploaded_file', filename=config.logo) }}" alt="Logo actual" style="max-width: 200px;">
+                        <p class="text-muted">Logo actual</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-primary">Guardar Configuracion</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

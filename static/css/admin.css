@@ -1,0 +1,865 @@
+/* Variables de color actualizadas para mejor contraste y estética */
+:root {
+    --primary-color: #e74c3c;
+    --primary-light: #ffebe9;
+    --primary-dark: #c0392b;
+    --secondary-color: #3498db;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --dark-color: #2c3e50;
+    --dark-light: #34495e;
+    --gray-color: #7f8c8d;
+    --gray-light: #ecf0f1;
+    --text-dark: #2d3436;
+    --text-light: #ffffff;
+    --shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+/* Estilos específicos para el panel de administración - MEJORADO */
+.admin-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Sidebar - Mejorado con gradiente más moderno y efectos de profundidad */
+.admin-sidebar {
+    width: 280px; /* Aumentado ligeramente para mejor espaciado */
+    background: linear-gradient(135deg, var(--dark-color) 0%, var(--dark-light) 100%);
+    color: var(--text-light);
+    padding: 20px 0;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow);
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.admin-brand {
+    padding: 0 25px 25px; /* Más padding para mejor espaciado */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+}
+
+    .admin-brand img {
+        height: 45px; /* Ligeramente más grande */
+        margin-right: 12px;
+        border-radius: 6px; /* Bordes redondeados para imagen */
+    }
+
+    .admin-brand h2 {
+        font-size: 1.6rem; /* Tamaño de fuente aumentado */
+        margin: 0;
+        font-weight: 700;
+        letter-spacing: 0.5px; /* Mejor espaciado de letras */
+    }
+
+.admin-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+    .admin-menu li {
+        margin-bottom: 8px; /* Más espacio entre elementos */
+    }
+
+    .admin-menu a {
+        display: flex;
+        align-items: center;
+        padding: 14px 25px; /* Más padding para mejor tacto */
+        color: rgba(255, 255, 255, 0.85); /* Texto ligeramente más visible */
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent; /* Borde más grueso */
+        font-weight: 500; /* Texto más legible */
+    }
+
+        .admin-menu a:hover,
+        .admin-menu a.active {
+            background-color: rgba(255, 255, 255, 0.12); /* Fondo más visible al pasar mouse */
+            color: var(--text-light);
+            border-left-color: var(--primary-color);
+            padding-left: 22px; /* Efecto de desplazamiento al activar */
+        }
+
+    .admin-menu i {
+        width: 22px; /* Más espacio para iconos */
+        margin-right: 12px;
+        text-align: center;
+        font-size: 1.1rem; /* Iconos ligeramente más grandes */
+    }
+
+.admin-user {
+    padding: 25px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 30px; /* Más margen superior */
+}
+
+.admin-user-info {
+    display: flex;
+    align-items: center;
+}
+
+.admin-user-avatar {
+    width: 48px; /* Avatar más grande */
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-weight: bold;
+    color: white;
+    font-size: 1.2rem; /* Texto más grande en avatar */
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2); /* Efecto de borde sutil */
+}
+
+.admin-user-details {
+    flex: 1;
+}
+
+.admin-user-name {
+    font-weight: 600;
+    margin-bottom: 4px;
+    font-size: 1.05rem; /* Texto ligeramente más grande */
+}
+
+.admin-user-role {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.75); /* Texto más legible */
+}
+
+/* Contenido principal - Mejorado con mejores espaciados y efectos */
+.admin-main {
+    flex: 1;
+    margin-left: 280px; /* Ajustado al nuevo ancho del sidebar */
+    padding: 25px; /* Más padding para mejor espaciado */
+    transition: all 0.3s ease;
+    background-color: #f5f7f9; /* Fondo ligeramente diferente para contraste */
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 35px; /* Más espacio inferior */
+    background-color: white;
+    padding: 20px 25px; /* Más padding */
+    border-radius: 12px; /* Bordes más redondeados */
+    box-shadow: var(--shadow);
+}
+
+.admin-title {
+    font-size: 1.9rem; /* Título más grande */
+    color: var(--dark-color);
+    margin: 0;
+    font-weight: 700;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 12px; /* Más espacio entre botones */
+}
+
+/* Dashboard Cards - Mejorado con mejores efectos visuales */
+.dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(265px, 1fr)); /* Tarjetas ligeramente más anchas */
+    gap: 25px; /* Más espacio entre tarjetas */
+    margin-bottom: 35px;
+}
+
+.dashboard-card {
+    background: linear-gradient(135deg, #ffffff 0%, #fdfdfd 100%); /* Gradiente sutil */
+    border-radius: 12px; /* Bordes más redondeados */
+    padding: 25px; /* Más padding */
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    border-left: 5px solid transparent; /* Borde lateral para acentuar */
+}
+
+    .dashboard-card:hover {
+        transform: translateY(-7px); /* Efecto de elevación más pronunciado */
+        box-shadow: var(--shadow-hover);
+    }
+
+.card-icon {
+    width: 65px; /* Iconos más grandes */
+    height: 65px;
+    border-radius: 14px; /* Bordes más redondeados */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 18px; /* Más espacio a la derecha */
+    font-size: 1.7rem; /* Iconos más grandes */
+}
+
+.card-icon-primary {
+    background-color: rgba(231, 76, 60, 0.15); /* Fondo más suave */
+    color: var(--primary-color);
+    border-left-color: var(--primary-color); /* Borde lateral consistente */
+}
+
+.card-icon-success {
+    background-color: rgba(46, 204, 113, 0.15);
+    color: #27ae60;
+    border-left-color: #27ae60;
+}
+
+.card-icon-warning {
+    background-color: rgba(241, 196, 15, 0.15);
+    color: #f39c12;
+    border-left-color: #f39c12;
+}
+
+.card-icon-info {
+    background-color: rgba(52, 152, 219, 0.15);
+    color: #3498db;
+    border-left-color: #3498db;
+}
+
+.card-content {
+    flex: 1;
+}
+
+.card-value {
+    font-size: 2rem; /* Valor más grande */
+    font-weight: 800; /* Texto más grueso */
+    margin-bottom: 6px;
+    color: var(--dark-color);
+}
+
+.card-label {
+    color: var(--gray-color);
+    font-weight: 500;
+    font-size: 0.95rem; /* Texto ligeramente más grande */
+}
+
+/* Tablas de administración - Mejoradas con mejor espaciado y efectos */
+.admin-table-container {
+    background-color: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: var(--shadow);
+    margin-bottom: 35px;
+    overflow: hidden;
+}
+
+.admin-table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.admin-table-title {
+    font-size: 1.5rem; /* Título más grande */
+    color: var(--dark-color);
+    margin: 0;
+    font-weight: 600;
+}
+
+.admin-table-actions {
+    display: flex;
+    gap: 12px; /* Más espacio entre botones */
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: separate; /* Necesario para border-radius */
+    border-spacing: 0;
+}
+
+    .admin-table th,
+    .admin-table td {
+        padding: 16px; /* Más padding para mejor legibilidad */
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+
+    .admin-table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        color: var(--dark-color);
+        position: sticky;
+        top: 0;
+        font-size: 0.95rem; /* Texto de encabezado ligeramente más grande */
+    }
+
+    .admin-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .admin-table tr:hover {
+        background-color: #f8f9fa;
+    }
+
+.table-actions {
+    display: flex;
+    gap: 10px; /* Más espacio entre botones de acción */
+}
+
+.btn-sm {
+    padding: 7px 14px; /* Botones ligeramente más grandes */
+    font-size: 0.9rem;
+    border-radius: 6px; /* Bordes más redondeados */
+}
+
+/* Formularios de administración - Mejorados con mejor espaciado y estilos */
+.admin-form-container {
+    background-color: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: var(--shadow);
+    margin-bottom: 35px;
+}
+
+.admin-form-title {
+    font-size: 1.6rem; /* Título más grande */
+    color: var(--dark-color);
+    margin-bottom: 30px; /* Más espacio inferior */
+    padding-bottom: 18px; /* Más espacio debajo del borde */
+    border-bottom: 1px solid #eee;
+    font-weight: 600;
+}
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -12px; /* Ajuste de márgenes */
+}
+
+.form-group {
+    flex: 1 0 calc(50% - 24px); /* Ajuste al nuevo margen */
+    margin: 0 12px 25px; /* Más espacio inferior */
+}
+
+.form-group-full {
+    flex: 1 0 calc(100% - 24px);
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 10px; /* Más espacio debajo de la etiqueta */
+    font-weight: 600;
+    color: var(--dark-color);
+    font-size: 0.95rem; /* Texto ligeramente más grande */
+}
+
+.form-control {
+    width: 100%;
+    padding: 14px 16px; /* Más padding para mejor tacto */
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
+    }
+
+.form-select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: white;
+    cursor: pointer;
+}
+
+.form-textarea {
+    min-height: 130px; /* Área de texto ligeramente más alta */
+    resize: vertical;
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    margin-bottom: 18px; /* Más espacio entre checks */
+}
+
+.form-check-input {
+    margin-right: 12px; /* Más espacio a la derecha */
+    width: 18px; /* Checkbox más grande */
+    height: 18px;
+}
+
+.form-check-label {
+    margin-bottom: 0;
+    font-size: 0.95rem; /* Texto ligeramente más grande */
+}
+
+/* Ingredientes de platos - Mejorado con mejor diseño visual */
+.ingredientes-container {
+    margin-bottom: 25px;
+}
+
+.ingrediente-item {
+    display: flex;
+    gap: 12px; /* Más espacio entre elementos */
+    margin-bottom: 18px; /* Más espacio entre ingredientes */
+    align-items: center;
+    padding: 16px; /* Más padding */
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+    .ingrediente-item:hover {
+        background-color: #edf2f7; /* Fondo al pasar mouse */
+    }
+
+.ingrediente-select,
+.ingrediente-input {
+    flex: 1;
+}
+
+.remove-ingrediente {
+    color: var(--danger-color);
+    background: none;
+    border: none;
+    font-size: 1.3rem; /* Icono más grande */
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+    .remove-ingrediente:hover {
+        background-color: rgba(231, 76, 60, 0.1); /* Fondo al pasar mouse */
+    }
+
+/* Preview de imagen - Mejorado con mejor diseño de contenedor */
+.image-preview {
+    width: 160px; /* Contenedor más grande */
+    height: 160px;
+    border: 2px dashed #ddd;
+    border-radius: 10px; /* Bordes más redondeados */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    margin-bottom: 18px;
+    transition: all 0.3s ease;
+}
+
+    .image-preview:hover {
+        border-color: var(--primary-color); /* Cambio de color al pasar mouse */
+    }
+
+    .image-preview img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: cover; /* Mejor ajuste de imagen */
+    }
+
+.image-preview-placeholder {
+    color: var(--gray-color);
+    text-align: center;
+    padding: 25px; /* Más padding */
+    font-size: 0.9rem;
+}
+
+/* Estadísticas y gráficos - Mejorado con mejor diseño de tarjetas */
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); /* Tarjetas más anchas */
+    gap: 25px; /* Más espacio entre tarjetas */
+    margin-bottom: 35px;
+}
+
+.stat-card {
+    background-color: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+}
+
+    .stat-card:hover {
+        transform: translateY(-5px); /* Efecto de elevación */
+        box-shadow: var(--shadow-hover);
+    }
+
+.stat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.stat-card-title {
+    font-size: 1.15rem; /* Título más grande */
+    color: var(--dark-color);
+    margin: 0;
+    font-weight: 600;
+}
+
+.stat-card-icon {
+    width: 45px; /* Icono más grande */
+    height: 45px;
+    border-radius: 10px; /* Bordes más redondeados */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.3rem; /* Icono más grande */
+}
+
+.stat-card-value {
+    font-size: 2rem; /* Valor más grande */
+    font-weight: 800; /* Texto más grueso */
+    color: var(--dark-color);
+    margin-bottom: 8px;
+}
+
+.stat-card-label {
+    color: var(--gray-color);
+    font-size: 0.95rem; /* Texto ligeramente más grande */
+}
+
+/* Estado de pedidos - Mejorado con mejor diseño visual */
+.estado-pedidos {
+    display: flex;
+    gap: 18px; /* Más espacio entre columnas */
+    margin-bottom: 35px;
+    overflow-x: auto;
+    padding-bottom: 15px;
+}
+
+.estado-column {
+    min-width: 320px; /* Columnas más anchas */
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    padding: 18px;
+}
+
+.estado-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #ddd;
+}
+
+.estado-title {
+    font-weight: 600;
+    color: var(--dark-color);
+    font-size: 1.1rem; /* Texto más grande */
+}
+
+.estado-count {
+    background-color: white;
+    padding: 4px 10px; /* Más padding */
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700; /* Texto más grueso */
+}
+
+.pedido-item {
+    background-color: white;
+    border-radius: 10px; /* Bordes más redondeados */
+    padding: 18px;
+    margin-bottom: 12px; /* Más espacio entre pedidos */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); /* Sombra más suave */
+    transition: all 0.2s ease;
+}
+
+    .pedido-item:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Sombra al pasar mouse */
+        transform: translateY(-2px); /* Efecto de elevación sutil */
+    }
+
+.pedido-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.pedido-codigo {
+    font-weight: 700; /* Texto más grueso */
+    color: var(--dark-color);
+    font-size: 1.05rem; /* Texto ligeramente más grande */
+}
+
+.pedido-hora {
+    font-size: 0.85rem;
+    color: var(--gray-color);
+}
+
+.pedido-cliente {
+    margin-bottom: 12px;
+    font-size: 0.95rem; /* Texto ligeramente más grande */
+}
+
+.pedido-total {
+    font-weight: 700; /* Texto más grueso */
+    color: var(--primary-color);
+    text-align: right;
+    font-size: 1.1rem; /* Texto más grande */
+}
+
+/* Responsive - Mejorado para una experiencia móvil más pulida */
+@media (max-width: 992px) {
+    .admin-sidebar {
+        width: 80px; /* Un poco más ancho para mejor tacto */
+    }
+
+    .admin-brand h2,
+    .admin-menu span,
+    .admin-user {
+        display: none;
+    }
+
+    .admin-menu a {
+        justify-content: center;
+        padding: 16px; /* Más padding para mejor tacto */
+    }
+
+    .admin-menu i {
+        margin-right: 0;
+        font-size: 1.3rem; /* Iconos más grandes */
+    }
+
+    .admin-main {
+        margin-left: 80px; /* Ajustado al nuevo ancho */
+        padding: 20px; /* Padding ajustado para móviles */
+    }
+
+    .form-group {
+        flex: 1 0 calc(100% - 24px);
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 18px; /* Más espacio entre elementos */
+    }
+
+    .admin-actions {
+        width: 100%;
+        justify-content: space-between;
+        flex-wrap: wrap; /* Permitir envoltura en pantallas pequeñas */
+    }
+
+    .dashboard-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-table {
+        display: block;
+        overflow-x: auto;
+    }
+
+    .estado-pedidos {
+        flex-direction: column;
+    }
+
+    .estado-column {
+        min-width: auto;
+    }
+}
+
+/* Utilidades de administración - Mejoradas con mejor diseño */
+.text-success {
+    color: var(--success-color) !important;
+}
+
+.text-warning {
+    color: var(--warning-color) !important;
+}
+
+.text-danger {
+    color: var(--danger-color) !important;
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.badge {
+    padding: 6px 12px; /* Más padding */
+    border-radius: 50px;
+    font-size: 0.8rem; /* Texto ligeramente más grande */
+    font-weight: 700; /* Texto más grueso */
+}
+
+.badge-success {
+    background-color: rgba(46, 204, 113, 0.15); /* Fondo más suave */
+    color: #27ae60;
+}
+
+.badge-warning {
+    background-color: rgba(241, 196, 15, 0.15);
+    color: #f39c12;
+}
+
+.badge-danger {
+    background-color: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+}
+
+.badge-info {
+    background-color: rgba(52, 152, 219, 0.15);
+    color: #3498db;
+}
+
+/* Toggle de sidebar para móviles - Mejorado con mejor diseño */
+.sidebar-toggle {
+    display: none;
+    position: fixed;
+    bottom: 25px; /* Más espacio desde abajo */
+    right: 25px; /* Más espacio desde la derecha */
+    z-index: 1100;
+    width: 55px; /* Botón más grande */
+    height: 55px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    border: none;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada */
+    font-size: 1.3rem; /* Icono más grande */
+    transition: all 0.3s ease;
+}
+
+    .sidebar-toggle:hover {
+        transform: scale(1.1); /* Efecto de crecimiento al pasar mouse */
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    }
+
+@media (max-width: 576px) {
+    .sidebar-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .admin-sidebar {
+        transform: translateX(-100%);
+    }
+
+        .admin-sidebar.active {
+            transform: translateX(0);
+            width: 280px; /* Ancho completo en móviles */
+        }
+
+    .admin-main {
+        margin-left: 0;
+        padding: 15px; /* Padding ajustado para móviles pequeños */
+    }
+
+    .admin-sidebar.active + .admin-main {
+        margin-left: 0;
+    }
+}
+
+/* Animaciones para el panel de administración - Mejoradas */
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.admin-table tr {
+    animation: slideInLeft 0.4s ease; /* Animación ligeramente más larga */
+}
+
+    .admin-table tr:nth-child(1) {
+        animation-delay: 0.05s;
+    }
+
+    .admin-table tr:nth-child(2) {
+        animation-delay: 0.1s;
+    }
+
+    .admin-table tr:nth-child(3) {
+        animation-delay: 0.15s;
+    }
+
+    .admin-table tr:nth-child(4) {
+        animation-delay: 0.2s;
+    }
+
+    .admin-table tr:nth-child(5) {
+        animation-delay: 0.25s;
+    }
+
+/* Efecto de fade in para las tarjetas */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dashboard-card,
+.stat-card {
+    animation: fadeIn 0.5s ease;
+}
+
+/* Personalización del scrollbar - Mejorada */
+.admin-sidebar::-webkit-scrollbar {
+    width: 6px; /* Scrollbar ligeramente más ancha */
+}
+
+.admin-sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 3px;
+}
+
+    .admin-sidebar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.4);
+    }
+
+/* Scrollbar para el contenido principal */
+.admin-main::-webkit-scrollbar {
+    width: 8px;
+}
+
+.admin-main::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.admin-main::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+    .admin-main::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }

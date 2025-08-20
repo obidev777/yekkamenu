@@ -1,0 +1,51 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ 'Editar' if extra else 'Nuevo' }} Extra - Administracion - {{ config.nombre_restaurante }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <!-- Sidebar -->
+    {% include 'admin/sidebar.html' %}
+
+    <!-- Main Content -->
+    <div class="admin-main">
+        <div class="admin-header">
+            <h1 class="admin-title">{{ 'Editar' if extra else 'Nuevo' }} Extra</h1>
+            <div class="admin-actions">
+                <a href="{{ url_for('admin_extras') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left"></i> Volver a Extras
+                </a>
+            </div>
+        </div>
+
+        <div class="admin-form-container">
+            <form method="POST" action="{{ url_for('editar_extra', extra_id=extra.id) if extra else url_for('nuevo_extra') }}">
+                <div class="form-group">
+                    <label for="nombre" class="form-label">Nombre *</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" value="{{ extra.nombre if extra else '' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="precio" class="form-label">Precio *</label>
+                    <input type="number" step="0.01" class="form-control" id="precio" name="precio" value="{{ extra.precio if extra else '' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="activo" name="activo" {% if not extra or extra.activo %}checked{% endif %}>
+                        <label class="form-check-label" for="activo">
+                            Extra activo
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">{{ 'Actualizar' if extra else 'Crear' }} Extra</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

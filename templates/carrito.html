@@ -1,0 +1,517 @@
+{% extends "base.html" %}
+
+{% block title %}Carrito - {{ config.nombre_restaurante }}{% endblock %}
+
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="cart-header">
+            <h1>Tu Carrito</h1>
+            <p>Revisa y personaliza tu pedido</p>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="cart-container">
+                    {% if session.carrito and session.carrito|length > 0 %}
+                    {% for item in session.carrito %}
+                    <div class="cart-item fade-in">
+                        <div class="cart-item-info">
+                            <div class="cart-item-image">
+                                <img src="{% if item.imagen %}{{ url_for('uploaded_file', filename=item.imagen) }}{% else %}{{ url_for('static', filename='images/default-dish.jpg') }}{% endif %}" alt="{{ item.nombre }}">
+                            </div>
+                            <div class="cart-item-details">
+                                <h4>{{ item.nombre }}</h4>
+                                <p class="cart-item-price">${{ "%.2f"|format(item.precio) }}</p>
+                                {% if item.personalizaciones %}
+                                <div class="cart-item-customizations">
+                                    <small>
+                                        Personalizaciones:
+                                        {% for key, value in item.personalizaciones.items() %}
+                                        {{ value.nombre }}{% if not loop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="cart-item-actions">
+                            <div class="quantity-selector">
+                                <button class="quantity-btn" onclick="updateCartItem({{ loop.index0 }}, {{ item.cantidad - 1 }})">-</button>
+                                <input type="number" class="quantity-input" value="{{ item.cantidad }}" min="1" readonly>
+                                <button class="quantity-btn" onclick="updateCartItem({{ loop.index0 }}, {{ item.cantidad + 1 }})">+</button>
+                            </div>
+                            <button class="btn btn-danger" onclick="removeCartItem({{ loop.index0 }})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="empty-cart">
+                        <i class="fas fa-shopping-cart"></i>
+                        <h3>Tu carrito esta vacio</h3>
+                        <p>Agrega algunos platos deliciosos para comenzar</p>
+                        <a href="/#menu_platos" class="btn btn-primary">Ver Menu</a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Extras Section -->
+                {% if session.carrito and session.carrito|length > 0 %}
+                <div class="cart-extras">
+                    <h3>Extras</h3>
+                    <p>Agrega extras a tu pedido (Maximo: {{ max_extras }})</p>
+
+                    <div class="extras-grid">
+                        {% for extra in extras %}
+                        <div class="extra-item">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="extras" value="{{ extra.id }}"
+                                       id="extra{{ extra.id }}" data-precio="{{ extra.precio }}">
+                                <label class="form-check-label" for="extra{{ extra.id }}">
+                                    {{ extra.nombre }} - ${{ "%.2f"|format(extra.precio) }}
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="col-lg-4">
+                {% if session.carrito and session.carrito|length > 0 %}
+                <div class="checkout-card">
+                    <h3>Resumen del Pedido</h3>
+
+                    <div class="checkout-summary">
+                        {% for item in session.carrito %}
+                        <div class="checkout-item">
+                            <span>{{ item.nombre }} x{{ item.cantidad }}</span>
+                            <span>${{ "%.2f"|format(item.precio * item.cantidad) }}</span>
+                        </div>
+                        {% endfor %}
+
+                        <div class="checkout-divider"></div>
+
+                        <div class="checkout-total">
+                            <strong>Total: $<span id="checkout-total">{{ "%.2f"|format(total) }}</span></strong>
+                        </div>
+                    </div>
+
+                    <form id="checkout-form" method="POST" action="{{ url_for('realizar_pedido') }}">
+                        <div class="form-group">
+                            <label for="nombre" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="nombre" name="nombre"
+                                   value="{{ session.cliente_nombre if session.cliente_nombre else '' }}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="telefono" class="form-label">Telefono *</label>
+                            <input type="tel" class="form-control" id="telefono" name="telefono"
+                                   value="{{ session.cliente_telefono if session.cliente_telefono else '' }}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="direccion" class="form-label">Direccion *</label>
+                            <textarea class="form-control" id="direccion" name="direccion" rows="3" required>{{ session.cliente_direccion if session.cliente_direccion else '' }}</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <small class="form-text">Necesitamos tu ubicacion para la entrega</small>
+                            <label for="ubicacion" class="form-label">Ubicacion *</label>
+                            <div class="form-group" style="padding:10px;margin:10px;">
+                                <input type="text" class="form-control" id="ubicacion" name="ubicacion" required readonly>
+                                <br />
+                                <center>
+                                    <button type="button" class="btn btn-outline-secondary" id="geolocation-btn">
+                                        <i class="fas fa-map-marker-alt"></i> Obtener Ubicacion
+                                    </button>
+                                </center>
+                                
+                            </div>
+                            
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Realizar Pedido</button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Calcular total con extras
+    function calculateTotalWithExtras() {
+        let total = {{ total }};
+        const checkboxes = document.querySelectorAll('input[name="extras"]:checked');
+
+        checkboxes.forEach(checkbox => {
+            const precio = parseFloat(checkbox.getAttribute('data-precio'));
+            total += precio;
+        });
+
+        document.getElementById('checkout-total').textContent = total.toFixed(2);
+    }
+
+function actualizarTotalCarrito() {
+    console.log('=== ACTUALIZANDO TOTAL CARRITO ===');
+    
+    const carritoData = localStorage.getItem('carrito');
+    console.log('Datos raw del localStorage:', carritoData);
+    
+    const carrito = carritoData ? JSON.parse(carritoData) : [];
+    console.log('Carrito parseado:', carrito);
+    
+    const totalPrecio = carrito.reduce((total, item, index) => {
+        console.log(`Procesando item ${index + 1}:`, item);
+        
+        let subtotal = (item.precio || 0) * (item.cantidad || 1);
+        console.log(`Subtotal base: ${subtotal}`);
+        
+        if (item.extras && Array.isArray(item.extras)) {
+            const extrasTotal = item.extras.reduce((extraTotal, extra, extraIndex) => {
+                console.log(`Extra ${extraIndex + 1}:`, extra);
+                return extraTotal + (extra.precio_extra || 0);
+            }, 0);
+            console.log(`Total extras: ${extrasTotal}`);
+            subtotal += extrasTotal;
+        }
+        
+        console.log(`Subtotal final item ${index + 1}: ${subtotal}`);
+        return total + subtotal;
+    }, 0);
+    
+    console.log('TOTAL CALCULADO:', totalPrecio);
+    const cartTotalElement = document.getElementById('checkout-total');
+    console.log('Elemento checkout-total encontrado:', cartTotalElement);
+    
+    if (cartTotalElement) {
+        cartTotalElement.textContent = `${totalPrecio.toFixed(2)}`;
+        console.log('Elemento actualizado correctamente');
+    } else {
+        console.log('ERROR: No se encontro el elemento checkout-total');
+        const debugElement = document.createElement('div');
+        debugElement.style.position = 'fixed';
+        debugElement.style.top = '10px';
+        debugElement.style.left = '10px';
+        debugElement.style.background = 'red';
+        debugElement.style.color = 'white';
+        debugElement.style.padding = '10px';
+        debugElement.style.zIndex = '9999';
+        debugElement.textContent = `DEBUG Total: $${totalPrecio.toFixed(2)}`;
+        document.body.appendChild(debugElement);
+    }
+    
+    return totalPrecio;
+}
+
+    // Event listeners para extras
+    document.querySelectorAll('input[name="extras"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const checkedCount = document.querySelectorAll('input[name="extras"]:checked').length;
+
+            if (checkedCount > {{ max_extras }}) {
+                this.checked = false;
+                alert('Solo puedes seleccionar hasta {{ max_extras }} extras');
+                return;
+            }
+
+            calculateTotalWithExtras();
+        });
+    });
+
+    function obtenerDireccion(callbackExito, callbackError) {
+    // Verificar si el navegador soporta geolocalizacion
+    if (!navigator.geolocation) {
+        if (callbackError) {
+            callbackError('Geolocalizacion no es soportada por este navegador');
+        }
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            // Success callback para geolocalizacion
+            var lat = position.coords.latitude;
+            var lng = position.coords.longitude;
+            
+            // Hacer reverse geocoding para obtener la direccion
+            reverseGeocoding(lat, lng, function(direccion) {
+                if (callbackExito) {
+                    callbackExito(direccion);
+                }
+            }, function(error) {
+                if (callbackError) {
+                    callbackError('Error al obtener direccion: ' + error);
+                }
+            });
+        },
+        function(error) {
+            // Error callback para geolocalizacion
+            var mensajeError = '';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    mensajeError = 'Permiso de ubicacion denegado por el usuario';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    mensajeError = 'Informacion de ubicacion no disponible';
+                    break;
+                case error.TIMEOUT:
+                    mensajeError = 'Tiempo de espera para obtener ubicacion agotado';
+                    break;
+                default:
+                    mensajeError = 'Error desconocido al obtener ubicacion';
+            }
+            
+            if (callbackError) {
+                callbackError(mensajeError);
+            }
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 60000
+        }
+    );
+}
+
+function reverseGeocoding(lat, lng, exito, error) {
+    var url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&zoom=18&addressdetails=1';
+    
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.setRequestHeader('Accept', 'application/json');
+    
+    xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+                var data = JSON.parse(xhr.responseText);
+                
+                if (data.error) {
+                    if (error) {
+                        error(data.error.message || 'Error en el servidor');
+                    }
+                    return;
+                }
+                
+                var direccion = {
+                    direccionCompleta: data.display_name || '',
+                    calle: (data.address && data.address.road) || '',
+                    numero: (data.address && data.address.house_number) || '',
+                    ciudad: (data.address && (data.address.city || data.address.town || data.address.village)) || '',
+                    codigoPostal: (data.address && data.address.postcode) || '',
+                    pais: (data.address && data.address.country) || '',
+                    coordenadas: { lat: lat, lng: lng }
+                };
+                
+                if (exito) {
+                    exito(direccion);
+                }
+            } catch (e) {
+                if (error) {
+                    error('Error al procesar la respuesta: ' + e.message);
+                }
+            }
+        } else {
+            if (error) {
+                error('Error HTTP: ' + xhr.status);
+            }
+        }
+    };
+    
+    xhr.onerror = function() {
+        if (error) {
+            error('Error de conexion');
+        }
+    };
+    
+    xhr.ontimeout = function() {
+        if (error) {
+            error('Tiempo de espera agotado');
+        }
+    };
+    
+    xhr.timeout = 10000;
+    xhr.send();
+}
+
+function obtenerDireccionSimple(callbackExito, callbackError) {
+    obtenerDireccion(
+        function(direccion) {
+            if (callbackExito) {
+                callbackExito(direccion.direccionCompleta);
+            }
+        },
+        callbackError
+    );
+}
+
+    // Inicializar geolocalizacion
+    function initGeolocation() {
+        const ubicacionInput = document.getElementById('ubicacion');
+        const geolocationBtn = document.getElementById('geolocation-btn');
+
+        if (geolocationBtn && ubicacionInput) {
+            geolocationBtn.addEventListener('click', function() {
+                if (!navigator.geolocation) {
+                    alert('La geolocalizacion no es compatible con tu navegador');
+                    return;
+                }
+
+                geolocationBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Obteniendo...';
+                geolocationBtn.disabled = true;
+
+                obtenerDireccionSimple(
+                    function (dir) {
+                        ubicacionInput.value = dir;
+                        geolocationBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Obtener Ubicacion';
+                        geolocationBtn.disabled = false;
+                    },
+                    function(error) {
+                        alert('Error al obtener la ubicacion: ' + error.message);
+                        geolocationBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Obtener Ubicacion';
+                        geolocationBtn.disabled = false;
+                    });
+            });
+        }
+    }
+
+    function actualizarCarrito() {
+    const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+    
+    const totalItems = carrito.reduce((total, item) => total + item.cantidad, 0);
+    const totalPrecio = carrito.reduce((total, item) => total + (item.precio * item.cantidad), 0);
+    
+    const cartCount = document.getElementById('cart-count');
+    if (cartCount) {
+        cartCount.textContent = totalItems;
+        cartCount.style.display = totalItems > 0 ? 'inline-block' : 'none';
+    }
+    
+    const cartTotal = document.getElementById('cart-total');
+    if (cartTotal) {
+        cartTotal.textContent = `${totalPrecio.toFixed(2)}`;
+    }
+    const cartBadge = document.querySelector('.cart-badge');
+    if (cartBadge) {
+        cartBadge.textContent = totalItems;
+        cartBadge.style.display = totalItems > 0 ? 'flex' : 'none';
+    }
+}
+
+function addToCart(platoId) {
+    const platoElement = document.querySelector(`[data-plato-id="${platoId}"]`);
+    let platoData;
+    
+    if (platoElement) {
+        platoData = {
+            id: platoId,
+            nombre: platoElement.dataset.nombre,
+            precio: parseFloat(platoElement.dataset.precio),
+            imagen: platoElement.dataset.imagen
+        };
+    } else {
+        console.warn('Datos del plato no encontrados en el DOM');
+        return;
+    }
+    let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+    const existingItem = carrito.find(item => item.id === platoId);
+    
+    if (existingItem) {
+        // Incrementar cantidad
+        existingItem.cantidad += 1;
+    } else {
+        // Agregar nuevo item
+        carrito.push({
+            id: platoId,
+            nombre: platoData.nombre,
+            precio: platoData.precio,
+            imagen: platoData.imagen,
+            cantidad: 1
+        });
+    }
+    
+    localStorage.setItem('carrito', JSON.stringify(carrito));
+    actualizarCarrito();
+    actualizarTotalCarrito();
+    mostrarNotificacion('Producto agregado al carrito');
+}
+
+function mostrarNotificacion(mensaje) {
+    let notificacion = document.getElementById('cart-notification');
+    
+    if (!notificacion) {
+        notificacion = document.createElement('div');
+        notificacion.id = 'cart-notification';
+        notificacion.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            z-index: 9999;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+        `;
+        document.body.appendChild(notificacion);
+    }
+    
+    notificacion.textContent = mensaje;
+    notificacion.style.transform = 'translateX(0)';
+    
+    setTimeout(() => {
+        notificacion.style.transform = 'translateX(100%)';
+    }, 3000);
+}
+
+function inicializarCarrito() {
+    actualizarCarrito();
+    
+    const cartIcon = document.querySelector('.cart-icon');
+    if (cartIcon) {
+        cartIcon.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = "{{ url_for('carrito') }}";
+        });
+    }
+}
+
+
+    // Inicializar cuando el DOM este listo
+    document.addEventListener('DOMContentLoaded', function() {
+        initGeolocation();
+
+        // Inicializar el calculo del total
+        calculateTotalWithExtras();
+
+        inicializarCarrito();
+        actualizarTotalCarrito();
+    });
+
+
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+        actualizarCarrito();
+        actualizarTotalCarrito();
+    }
+});
+
+window.addEventListener('storage', function(e) {
+    if (e.key === 'carrito') {
+        actualizarCarrito();
+        actualizarTotalCarrito();
+    }
+});
+</script>
+{% endblock %}

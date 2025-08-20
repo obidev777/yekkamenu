@@ -1,0 +1,34 @@
+<!-- templates/partials/platos_list.html -->
+{% if platos %}
+<div class="platos-grid">
+    {% for plato in platos %}
+    <div class="plato-card fade-in">
+        <div class="plato-image">
+            <img src="{% if plato.imagen %}{{ url_for('uploaded_file', filename=plato.imagen) }}{% else %}{{ url_for('static', filename='images/default-dish.jpg') }}{% endif %}" alt="{{ plato.nombre }}">
+            {% if plato.categoria_obj %}
+            <span class="plato-category">{{ plato.categoria_id }}</span>
+            {% endif %}
+        </div>
+        <div class="plato-info">
+            <h3>{{ plato.nombre }}</h3>
+            <p class="plato-description">{{ plato.descripcion }}</p>
+            <div class="plato-price">${{ "%.2f"|format(plato.precio_venta) }}</div>
+            <div class="plato-actions">
+                <button class="btn" onclick="addToCart({{ plato.id }})">
+                    <i class="fas fa-plus"></i> Agregar
+                </button>
+                <button class="btn btn-outline" data-bs-toggle="modal" data-bs-target="#platoModal{{ plato.id }}">
+                    <i class="fas fa-info"></i> Detalles
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-utensils"></i>
+    <h3>No se encontraron platos</h3>
+    <p>Intenta con otros filtros de busqueda</p>
+</div>
+{% endif %}

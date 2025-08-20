@@ -1,0 +1,170 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Administracion - {{ config.nombre_restaurante }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <!-- Sidebar -->
+    <div class="admin-sidebar">
+        <div class="admin-brand">
+            <img src="{{ url_for('uploaded_file', filename=config.logo) }}" alt="Logo actual" style="max-width: 200px;">
+            
+        </div>
+
+        <ul class="admin-menu">
+            <li><a href="{{ url_for('admin_panel') }}" class="active"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a></li>
+            <li><a href="{{ url_for('admin_pedidos') }}"><i class="fas fa-shopping-cart"></i> <span>Pedidos</span></a></li>
+            <li><a href="{{ url_for('admin_productos') }}"><i class="fas fa-box"></i> <span>Productos</span></a></li>
+            <li><a href="{{ url_for('admin_platos') }}"><i class="fas fa-utensils"></i> <span>Platos</span></a></li>
+            <li><a href="{{ url_for('admin_categorias') }}"><i class="fas fa-tags"></i> <span>Categorias</span></a></li>
+            <li><a href="{{ url_for('admin_extras') }}"><i class="fas fa-plus-circle"></i> <span>Extras</span></a></li>
+            <li><a href="{{ url_for('admin_configuracion') }}"><i class="fas fa-cog"></i> <span>Configuracion</span></a></li>
+        </ul>
+
+        <div class="admin-user">
+            <div class="admin-user-info">
+                <div class="admin-user-avatar">
+                    {{ session.username[0]|upper }}
+                </div>
+                <div class="admin-user-details">
+                    <div class="admin-user-name">{{ session.username }}</div>
+                    <div class="admin-user-role">Administrador</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="admin-main">
+        <div class="admin-header">
+            <h1 class="admin-title">Dashboard</h1>
+            <div class="admin-actions">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-primary" target="_blank">
+                    <i class="fas fa-external-link-alt"></i> Ver Tienda
+                </a>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="dashboard-cards">
+            <div class="dashboard-card">
+                <div class="card-icon card-icon-primary">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="card-content">
+                    <div class="card-value">{{ pedidos_pendientes }}</div>
+                    <div class="card-label">Pedidos Pendientes</div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-icon card-icon-success">
+                    <i class="fas fa-utensils"></i>
+                </div>
+                <div class="card-content">
+                    <div class="card-value">{{ total_platos }}</div>
+                    <div class="card-label">Platos Activos</div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-icon card-icon-warning">
+                    <i class="fas fa-box"></i>
+                </div>
+                <div class="card-content">
+                    <div class="card-value">{{ total_productos }}</div>
+                    <div class="card-label">Productos</div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-icon card-icon-info">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="card-content">
+                    <div class="card-value">1</div>
+                    <div class="card-label">Usuarios Activos</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="admin-table-container">
+            <div class="admin-table-header">
+                <h2 class="admin-table-title">Pedidos Recientes</h2>
+                <div class="admin-table-actions">
+                    <a href="{{ url_for('admin_pedidos') }}" class="btn btn-sm btn-primary">Ver Todos</a>
+                </div>
+            </div>
+
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Codigo</th>
+                        <th>Cliente</th>
+                        <th>Total</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pedido in pedidos_recientes %}
+                    <tr>
+                        <td>{{ pedido.codigo }}</td>
+                        <td>{{ pedido.cliente_nombre }}</td>
+                        <td>${{ "%.2f"|format(pedido.total) }}</td>
+                        <td>
+                            <span class="badge {% if pedido.estado == 'pendiente' %}badge-warning{% elif pedido.estado == 'completado' %}badge-success{% elif pedido.estado == 'cancelado' %}badge-danger{% else %}badge-info{% endif %}">
+                                {{ pedido.estado|title }}
+                            </span>
+                        </td>
+                        <td>{{ pedido.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>
+                            <a href="{{ url_for('ver_pedido', pedido_id=pedido.id) }}" class="btn btn-sm btn-info">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center">No hay pedidos recientes</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Boton toggle para sidebar en moviles -->
+<button class="sidebar-toggle" id="sidebarToggle">
+    <i class="fas fa-bars"></i>
+</button>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Inicializar tooltips
+    document.addEventListener('DOMContentLoaded', function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+
+        // Toggle sidebar en moviles
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const adminSidebar = document.querySelector('.admin-sidebar');
+
+        if (sidebarToggle && adminSidebar) {
+            sidebarToggle.addEventListener('click', function () {
+                adminSidebar.classList.toggle('active');
+            });
+        }
+    });
+</script>
+{% endblock %}
