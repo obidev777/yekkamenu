@@ -2,4 +2,3 @@ flask
 flask_sqlalchemy
 gunicorn
 werkzeug
-functools
