@@ -956,18 +956,7 @@ def api_carrito():
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# Inicializar la base de datos y crear usuario admin por defecto
-@app.before_first_request
-def inicializar_base_datos():
-    db.create_all()
-    
-    # Crear usuario admin por defecto si no existe
-    if not Usuario.query.filter_by(username='admin').first():
-        admin = Usuario(username='admin')
-        admin.set_password('admin123')
-        db.session.add(admin)
-        db.session.commit()
-        print("Usuario admin creado: admin / admin123")
 
 if __name__ == '__main__':
+
     app.run(debug=True,port=443)
