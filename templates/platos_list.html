@@ -5,7 +5,7 @@
     <div class="plato-card fade-in">
         <div class="plato-image">
             <img src="{% if plato.imagen %}{{ url_for('uploaded_file', filename=plato.imagen) }}{% else %}{{ url_for('static', filename='images/default-dish.jpg') }}{% endif %}" alt="{{ plato.nombre }}">
-            {% if plato.categoria_obj %}
+            {% if plato.categoria %}
             <span class="plato-category">{{ plato.categoria_id }}</span>
             {% endif %}
         </div>

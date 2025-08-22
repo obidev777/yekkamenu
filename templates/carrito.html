@@ -1,517 +1,872 @@
-{% extends "base.html" %}
-
-{% block title %}Carrito - {{ config.nombre_restaurante }}{% endblock %}
-
-
-{% block content %}
-<section class="section">
-    <div class="container">
-        <div class="cart-header">
-            <h1>Tu Carrito</h1>
-            <p>Revisa y personaliza tu pedido</p>
-        </div>
-
-        <div class="row">
-            <div class="col-lg-8">
-                <div class="cart-container">
-                    {% if session.carrito and session.carrito|length > 0 %}
-                    {% for item in session.carrito %}
-                    <div class="cart-item fade-in">
-                        <div class="cart-item-info">
-                            <div class="cart-item-image">
-                                <img src="{% if item.imagen %}{{ url_for('uploaded_file', filename=item.imagen) }}{% else %}{{ url_for('static', filename='images/default-dish.jpg') }}{% endif %}" alt="{{ item.nombre }}">
-                            </div>
-                            <div class="cart-item-details">
-                                <h4>{{ item.nombre }}</h4>
-                                <p class="cart-item-price">${{ "%.2f"|format(item.precio) }}</p>
-                                {% if item.personalizaciones %}
-                                <div class="cart-item-customizations">
-                                    <small>
-                                        Personalizaciones:
-                                        {% for key, value in item.personalizaciones.items() %}
-                                        {{ value.nombre }}{% if not loop.last %}, {% endif %}
-                                        {% endfor %}
-                                    </small>
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="cart-item-actions">
-                            <div class="quantity-selector">
-                                <button class="quantity-btn" onclick="updateCartItem({{ loop.index0 }}, {{ item.cantidad - 1 }})">-</button>
-                                <input type="number" class="quantity-input" value="{{ item.cantidad }}" min="1" readonly>
-                                <button class="quantity-btn" onclick="updateCartItem({{ loop.index0 }}, {{ item.cantidad + 1 }})">+</button>
-                            </div>
-                            <button class="btn btn-danger" onclick="removeCartItem({{ loop.index0 }})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    {% endfor %}
-                    {% else %}
-                    <div class="empty-cart">
-                        <i class="fas fa-shopping-cart"></i>
-                        <h3>Tu carrito esta vacio</h3>
-                        <p>Agrega algunos platos deliciosos para comenzar</p>
-                        <a href="/#menu_platos" class="btn btn-primary">Ver Menu</a>
-                    </div>
-                    {% endif %}
-                </div>
-
-                <!-- Extras Section -->
-                {% if session.carrito and session.carrito|length > 0 %}
-                <div class="cart-extras">
-                    <h3>Extras</h3>
-                    <p>Agrega extras a tu pedido (Maximo: {{ max_extras }})</p>
-
-                    <div class="extras-grid">
-                        {% for extra in extras %}
-                        <div class="extra-item">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="extras" value="{{ extra.id }}"
-                                       id="extra{{ extra.id }}" data-precio="{{ extra.precio }}">
-                                <label class="form-check-label" for="extra{{ extra.id }}">
-                                    {{ extra.nombre }} - ${{ "%.2f"|format(extra.precio) }}
-                                </label>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-
-            <div class="col-lg-4">
-                {% if session.carrito and session.carrito|length > 0 %}
-                <div class="checkout-card">
-                    <h3>Resumen del Pedido</h3>
-
-                    <div class="checkout-summary">
-                        {% for item in session.carrito %}
-                        <div class="checkout-item">
-                            <span>{{ item.nombre }} x{{ item.cantidad }}</span>
-                            <span>${{ "%.2f"|format(item.precio * item.cantidad) }}</span>
-                        </div>
-                        {% endfor %}
-
-                        <div class="checkout-divider"></div>
-
-                        <div class="checkout-total">
-                            <strong>Total: $<span id="checkout-total">{{ "%.2f"|format(total) }}</span></strong>
-                        </div>
-                    </div>
-
-                    <form id="checkout-form" method="POST" action="{{ url_for('realizar_pedido') }}">
-                        <div class="form-group">
-                            <label for="nombre" class="form-label">Nombre</label>
-                            <input type="text" class="form-control" id="nombre" name="nombre"
-                                   value="{{ session.cliente_nombre if session.cliente_nombre else '' }}" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="telefono" class="form-label">Telefono *</label>
-                            <input type="tel" class="form-control" id="telefono" name="telefono"
-                                   value="{{ session.cliente_telefono if session.cliente_telefono else '' }}" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="direccion" class="form-label">Direccion *</label>
-                            <textarea class="form-control" id="direccion" name="direccion" rows="3" required>{{ session.cliente_direccion if session.cliente_direccion else '' }}</textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <small class="form-text">Necesitamos tu ubicacion para la entrega</small>
-                            <label for="ubicacion" class="form-label">Ubicacion *</label>
-                            <div class="form-group" style="padding:10px;margin:10px;">
-                                <input type="text" class="form-control" id="ubicacion" name="ubicacion" required readonly>
-                                <br />
-                                <center>
-                                    <button type="button" class="btn btn-outline-secondary" id="geolocation-btn">
-                                        <i class="fas fa-map-marker-alt"></i> Obtener Ubicacion
-                                    </button>
-                                </center>
-                                
-                            </div>
-                            
-                        </div>
-
-                        <button type="submit" class="btn btn-primary">Realizar Pedido</button>
-                    </form>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</section>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    // Calcular total con extras
-    function calculateTotalWithExtras() {
-        let total = {{ total }};
-        const checkboxes = document.querySelectorAll('input[name="extras"]:checked');
-
-        checkboxes.forEach(checkbox => {
-            const precio = parseFloat(checkbox.getAttribute('data-precio'));
-            total += precio;
-        });
-
-        document.getElementById('checkout-total').textContent = total.toFixed(2);
-    }
-
-function actualizarTotalCarrito() {
-    console.log('=== ACTUALIZANDO TOTAL CARRITO ===');
-    
-    const carritoData = localStorage.getItem('carrito');
-    console.log('Datos raw del localStorage:', carritoData);
-    
-    const carrito = carritoData ? JSON.parse(carritoData) : [];
-    console.log('Carrito parseado:', carrito);
-    
-    const totalPrecio = carrito.reduce((total, item, index) => {
-        console.log(`Procesando item ${index + 1}:`, item);
-        
-        let subtotal = (item.precio || 0) * (item.cantidad || 1);
-        console.log(`Subtotal base: ${subtotal}`);
-        
-        if (item.extras && Array.isArray(item.extras)) {
-            const extrasTotal = item.extras.reduce((extraTotal, extra, extraIndex) => {
-                console.log(`Extra ${extraIndex + 1}:`, extra);
-                return extraTotal + (extra.precio_extra || 0);
-            }, 0);
-            console.log(`Total extras: ${extrasTotal}`);
-            subtotal += extrasTotal;
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrito - Restaurante</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
-        
-        console.log(`Subtotal final item ${index + 1}: ${subtotal}`);
-        return total + subtotal;
-    }, 0);
-    
-    console.log('TOTAL CALCULADO:', totalPrecio);
-    const cartTotalElement = document.getElementById('checkout-total');
-    console.log('Elemento checkout-total encontrado:', cartTotalElement);
-    
-    if (cartTotalElement) {
-        cartTotalElement.textContent = `${totalPrecio.toFixed(2)}`;
-        console.log('Elemento actualizado correctamente');
-    } else {
-        console.log('ERROR: No se encontro el elemento checkout-total');
-        const debugElement = document.createElement('div');
-        debugElement.style.position = 'fixed';
-        debugElement.style.top = '10px';
-        debugElement.style.left = '10px';
-        debugElement.style.background = 'red';
-        debugElement.style.color = 'white';
-        debugElement.style.padding = '10px';
-        debugElement.style.zIndex = '9999';
-        debugElement.textContent = `DEBUG Total: $${totalPrecio.toFixed(2)}`;
-        document.body.appendChild(debugElement);
-    }
-    
-    return totalPrecio;
-}
 
-    // Event listeners para extras
-    document.querySelectorAll('input[name="extras"]').forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            const checkedCount = document.querySelectorAll('input[name="extras"]:checked').length;
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
 
-            if (checkedCount > {{ max_extras }}) {
-                this.checked = false;
-                alert('Solo puedes seleccionar hasta {{ max_extras }} extras');
-                return;
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .section {
+            padding: 20px 0;
+        }
+
+        .cart-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+            .cart-header h1 {
+                font-size: 28px;
+                font-weight: 700;
+                color: #2c3e50;
+                margin-bottom: 8px;
             }
 
-            calculateTotalWithExtras();
-        });
-    });
+            .cart-header p {
+                color: #7f8c8d;
+                font-size: 16px;
+            }
 
-    function obtenerDireccion(callbackExito, callbackError) {
-    // Verificar si el navegador soporta geolocalizacion
-    if (!navigator.geolocation) {
-        if (callbackError) {
-            callbackError('Geolocalizacion no es soportada por este navegador');
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -15px;
         }
-        return;
-    }
 
-    navigator.geolocation.getCurrentPosition(
-        function(position) {
-            // Success callback para geolocalizacion
-            var lat = position.coords.latitude;
-            var lng = position.coords.longitude;
-            
-            // Hacer reverse geocoding para obtener la direccion
-            reverseGeocoding(lat, lng, function(direccion) {
-                if (callbackExito) {
-                    callbackExito(direccion);
-                }
-            }, function(error) {
-                if (callbackError) {
-                    callbackError('Error al obtener direccion: ' + error);
-                }
-            });
-        },
-        function(error) {
-            // Error callback para geolocalizacion
-            var mensajeError = '';
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    mensajeError = 'Permiso de ubicacion denegado por el usuario';
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    mensajeError = 'Informacion de ubicacion no disponible';
-                    break;
-                case error.TIMEOUT:
-                    mensajeError = 'Tiempo de espera para obtener ubicacion agotado';
-                    break;
-                default:
-                    mensajeError = 'Error desconocido al obtener ubicacion';
-            }
-            
-            if (callbackError) {
-                callbackError(mensajeError);
-            }
-        },
-        {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 60000
+        .col-lg-8, .col-lg-4 {
+            padding: 0 15px;
+            width: 100%;
         }
-    );
-}
 
-function reverseGeocoding(lat, lng, exito, error) {
-    var url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&zoom=18&addressdetails=1';
-    
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-    xhr.setRequestHeader('Accept', 'application/json');
-    
-    xhr.onload = function() {
-        if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-                var data = JSON.parse(xhr.responseText);
-                
-                if (data.error) {
-                    if (error) {
-                        error(data.error.message || 'Error en el servidor');
-                    }
-                    return;
-                }
-                
-                var direccion = {
-                    direccionCompleta: data.display_name || '',
-                    calle: (data.address && data.address.road) || '',
-                    numero: (data.address && data.address.house_number) || '',
-                    ciudad: (data.address && (data.address.city || data.address.town || data.address.village)) || '',
-                    codigoPostal: (data.address && data.address.postcode) || '',
-                    pais: (data.address && data.address.country) || '',
-                    coordenadas: { lat: lat, lng: lng }
-                };
-                
-                if (exito) {
-                    exito(direccion);
-                }
-            } catch (e) {
-                if (error) {
-                    error('Error al procesar la respuesta: ' + e.message);
-                }
+        @media (min-width: 992px) {
+            .col-lg-8 {
+                width: 66.666667%;
             }
-        } else {
-            if (error) {
-                error('Error HTTP: ' + xhr.status);
+
+            .col-lg-4 {
+                width: 33.333333%;
             }
         }
-    };
-    
-    xhr.onerror = function() {
-        if (error) {
-            error('Error de conexion');
-        }
-    };
-    
-    xhr.ontimeout = function() {
-        if (error) {
-            error('Tiempo de espera agotado');
-        }
-    };
-    
-    xhr.timeout = 10000;
-    xhr.send();
-}
 
-function obtenerDireccionSimple(callbackExito, callbackError) {
-    obtenerDireccion(
-        function(direccion) {
-            if (callbackExito) {
-                callbackExito(direccion.direccionCompleta);
+        .cart-container, .cart-extras, .checkout-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+            .cart-item:last-child {
+                border-bottom: none;
             }
-        },
-        callbackError
-    );
-}
 
-    // Inicializar geolocalizacion
-    function initGeolocation() {
-        const ubicacionInput = document.getElementById('ubicacion');
-        const geolocationBtn = document.getElementById('geolocation-btn');
-
-        if (geolocationBtn && ubicacionInput) {
-            geolocationBtn.addEventListener('click', function() {
-                if (!navigator.geolocation) {
-                    alert('La geolocalizacion no es compatible con tu navegador');
-                    return;
-                }
-
-                geolocationBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Obteniendo...';
-                geolocationBtn.disabled = true;
-
-                obtenerDireccionSimple(
-                    function (dir) {
-                        ubicacionInput.value = dir;
-                        geolocationBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Obtener Ubicacion';
-                        geolocationBtn.disabled = false;
-                    },
-                    function(error) {
-                        alert('Error al obtener la ubicacion: ' + error.message);
-                        geolocationBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Obtener Ubicacion';
-                        geolocationBtn.disabled = false;
-                    });
-            });
+        .cart-item-info {
+            display: flex;
+            align-items: center;
+            flex: 1;
         }
-    }
 
-    function actualizarCarrito() {
-    const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
-    
-    const totalItems = carrito.reduce((total, item) => total + item.cantidad, 0);
-    const totalPrecio = carrito.reduce((total, item) => total + (item.precio * item.cantidad), 0);
-    
-    const cartCount = document.getElementById('cart-count');
-    if (cartCount) {
-        cartCount.textContent = totalItems;
-        cartCount.style.display = totalItems > 0 ? 'inline-block' : 'none';
-    }
-    
-    const cartTotal = document.getElementById('cart-total');
-    if (cartTotal) {
-        cartTotal.textContent = `${totalPrecio.toFixed(2)}`;
-    }
-    const cartBadge = document.querySelector('.cart-badge');
-    if (cartBadge) {
-        cartBadge.textContent = totalItems;
-        cartBadge.style.display = totalItems > 0 ? 'flex' : 'none';
-    }
-}
+        .cart-item-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-right: 15px;
+        }
 
-function addToCart(platoId) {
-    const platoElement = document.querySelector(`[data-plato-id="${platoId}"]`);
-    let platoData;
-    
-    if (platoElement) {
-        platoData = {
-            id: platoId,
-            nombre: platoElement.dataset.nombre,
-            precio: parseFloat(platoElement.dataset.precio),
-            imagen: platoElement.dataset.imagen
-        };
-    } else {
-        console.warn('Datos del plato no encontrados en el DOM');
-        return;
-    }
-    let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
-    const existingItem = carrito.find(item => item.id === platoId);
-    
-    if (existingItem) {
-        // Incrementar cantidad
-        existingItem.cantidad += 1;
-    } else {
-        // Agregar nuevo item
-        carrito.push({
-            id: platoId,
-            nombre: platoData.nombre,
-            precio: platoData.precio,
-            imagen: platoData.imagen,
-            cantidad: 1
-        });
-    }
-    
-    localStorage.setItem('carrito', JSON.stringify(carrito));
-    actualizarCarrito();
-    actualizarTotalCarrito();
-    mostrarNotificacion('Producto agregado al carrito');
-}
+            .cart-item-image img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
 
-function mostrarNotificacion(mensaje) {
-    let notificacion = document.getElementById('cart-notification');
-    
-    if (!notificacion) {
-        notificacion = document.createElement('div');
-        notificacion.id = 'cart-notification';
-        notificacion.style.cssText = `
+        .cart-item-details {
+            flex: 1;
+        }
+
+            .cart-item-details h4 {
+                font-size: 18px;
+                margin-bottom: 5px;
+                color: #2c3e50;
+            }
+
+        .cart-item-price {
+            font-weight: 600;
+            color: #e74c3c;
+            margin-bottom: 5px;
+        }
+
+        .cart-item-customizations {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .cart-item-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .quantity-btn {
+            width: 32px;
+            height: 32px;
+            background: #f8f9fa;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .quantity-input {
+            width: 40px;
+            height: 32px;
+            border: none;
+            text-align: center;
+            padding: 0;
+            background: white;
+            -moz-appearance: textfield;
+        }
+
+            .quantity-input::-webkit-outer-spin-button,
+            .quantity-input::-webkit-inner-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+
+        .btn-danger {
+            background: #e74c3c;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+            .empty-cart i {
+                font-size: 60px;
+                color: #bdc3c7;
+                margin-bottom: 15px;
+            }
+
+            .empty-cart h3 {
+                font-size: 22px;
+                margin-bottom: 10px;
+                color: #7f8c8d;
+            }
+
+            .empty-cart p {
+                color: #95a5a6;
+                margin-bottom: 20px;
+            }
+
+        .btn-primary {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .cart-extras h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .cart-extras p {
+            color: #7f8c8d;
+            margin-bottom: 15px;
+        }
+
+        .extras-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+        }
+
+        .extra-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+            .extra-item:last-child {
+                border-bottom: none;
+            }
+
+        .form-check {
+            display: flex;
+            align-items: center;
+        }
+
+        .form-check-input {
+            margin-right: 10px;
+        }
+
+        .checkout-card h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .checkout-summary {
+            margin-bottom: 20px;
+        }
+
+        .checkout-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .checkout-divider {
+            height: 1px;
+            background: #ecf0f1;
+            margin: 15px 0;
+        }
+
+        .checkout-total {
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            font-weight: 700;
+            margin: 20px 0;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        textarea.form-control {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-text {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .btn-outline-secondary {
+            background: transparent;
+            border: 1px solid #7f8c8d;
+            color: #7f8c8d;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #cart-notification {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: var(--primary);
+            background: #e74c3c;
             color: white;
             padding: 15px 20px;
             border-radius: 10px;
-            box-shadow: var(--shadow);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             z-index: 9999;
             transform: translateX(100%);
             transition: transform 0.3s ease;
             max-width: 300px;
-        `;
-        document.body.appendChild(notificacion);
-    }
-    
-    notificacion.textContent = mensaje;
-    notificacion.style.transform = 'translateX(0)';
-    
-    setTimeout(() => {
-        notificacion.style.transform = 'translateX(100%)';
-    }, 3000);
-}
+        }
 
-function inicializarCarrito() {
-    actualizarCarrito();
-    
-    const cartIcon = document.querySelector('.cart-icon');
-    if (cartIcon) {
-        cartIcon.addEventListener('click', function(e) {
+        @media (max-width: 768px) {
+            .cart-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .cart-item-actions {
+                width: 100%;
+                justify-content: space-between;
+                margin-top: 10px;
+            }
+
+            .extras-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <section class="section">
+        <div class="container">
+            <div class="cart-header">
+                <h1>Tu Carrito</h1>
+                <p>Revisa y personaliza tu pedido</p>
+                <a id="btn_secion_ver_menu"></a>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="cart-container" id="cart-items-container">
+                        <!-- Los items del carrito se cargaran dinamicamente -->
+                    </div>
+
+                    <!-- Extras Section -->
+                    <div class="cart-extras" id="extras-section" style="display: none;">
+                        <h3>Extras</h3>
+                        <p>Agrega extras a tu pedido (Maximo: <span id="max-extras">3</span>)</p>
+
+                        <div class="extras-grid" id="extras-container">
+                            <!-- Los extras se cargaran dinamicamente -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="checkout-card" id="checkout-section" style="display: none;">
+                        <h3>Resumen del Pedido</h3>
+
+                        <div class="checkout-summary" id="checkout-summary">
+                            <!-- El resumen se actualizara dinamicamente -->
+                        </div>
+
+                        <form id="checkout-form" method="POST" action="{{ url_for('realizar_pedido') }}">
+                            <div class="form-group">
+                                <label for="nombre" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="telefono" class="form-label">Telefono *</label>
+                                <input type="tel" class="form-control" id="telefono" name="telefono" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="direccion" class="form-label">Direccion *</label>
+                                <textarea class="form-control" id="direccion" name="direccion" rows="3" required></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <small class="form-text">Necesitamos tu ubicacion para la entrega</small>
+                                <label for="ubicacion" class="form-label">Ubicacion *</label>
+                                <div style="padding:10px;margin:10px;">
+                                    <input type="text" class="form-control" id="ubicacion" name="ubicacion" required readonly>
+                                    <br/>
+                                    <br/>
+                                    <center>
+                                        <button type="button" class="btn btn-outline-secondary" id="geolocation-btn">
+                                            <i class="fas fa-map-marker-alt"></i> Obtener Ubicacion
+                                        </button>
+                                    </center>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn-primary" style="width: 100%; padding: 12px;">Realizar Pedido</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Variables globales
+        let cart = [];
+        let extras = [];
+        let maxExtras = 3;
+
+        // Funciones para el carrito
+        function loadCart() {
+            const cartData = localStorage.getItem('carrito');
+            cart = cartData ? JSON.parse(cartData) : [];
+            renderCart();
+        }
+
+        function saveCart() {
+            localStorage.setItem('carrito', JSON.stringify(cart));
+            updateCartCounter();
+        }
+
+        function renderCart() {
+            const cartContainer = document.getElementById('cart-items-container');
+            const extrasSection = document.getElementById('extras-section');
+            const checkoutSection = document.getElementById('checkout-section');
+            const btnVerMenuSection = document.getElementById('btn_secion_ver_menu');
+
+            if (cart.length === 0) {
+                cartContainer.innerHTML = `
+                        <div class="empty-cart">
+                            <i class="fas fa-shopping-cart"></i>
+                            <h3>Tu carrito esta vacio</h3>
+                            <p>Agrega algunos platos deliciosos para comenzar</p>
+                            <a href="/" class="btn-primary">Ver Menu</a>
+                        </div>
+                    `;
+                extrasSection.style.display = 'none';
+                checkoutSection.style.display = 'none';
+                btnVerMenuSection.innerHTML = ''
+                return;
+            }
+
+            btnVerMenuSection.innerHTML = '</br><a href="/" class="btn-primary">Ver Menu</a>';
+
+            // Mostrar secciones
+            extrasSection.style.display = 'block';
+            checkoutSection.style.display = 'block';
+
+            // Renderizar items del carrito
+            cartContainer.innerHTML = '';
+            cart.forEach((item, index) => {
+                console.log(item);
+                const cartItem = document.createElement('div');
+                cartItem.className = 'cart-item';
+                cartItem.innerHTML = `
+                        <div class="cart-item-info">
+                            <div class="cart-item-image">
+                                <img src="${item.imagen ? '/uploads/' + item.imagen : '/static/images/default-dish.jpg'}" alt="${item.nombre}">
+                            </div>
+                            <div class="cart-item-details">
+                                <h4>${item.nombre}</h4>
+                                <p class="cart-item-price">$${item.precio}</p>
+                            </div>
+                        </div>
+                        <div class="cart-item-actions">
+                            <div class="quantity-selector">
+                                <button class="quantity-btn" onclick="updateQuantity(${index}, ${item.cantidad - 1})">-</button>
+                                <input type="number" class="quantity-input" value="${item.cantidad}" min="1" readonly>
+                                <button class="quantity-btn" onclick="updateQuantity(${index}, ${item.cantidad + 1})">+</button>
+                            </div>
+                            <button class="btn-danger" onclick="removeItem(${index})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                cartContainer.appendChild(cartItem);
+            });
+
+            // Actualizar resumen y total
+            updateCheckoutSummary();
+        }
+
+        function updateQuantity(index, newQuantity) {
+            if (newQuantity < 1) {
+                removeItem(index);
+                return;
+            }
+
+            cart[index].cantidad = newQuantity;
+            saveCart();
+            renderCart();
+        }
+
+        function removeItem(index) {
+            cart.splice(index, 1);
+            saveCart();
+            renderCart();
+        }
+
+        function updateCheckoutSummary() {
+            const checkoutSummary = document.getElementById('checkout-summary');
+            let total = 0;
+
+            checkoutSummary.innerHTML = '';
+
+            cart.forEach(item => {
+                const itemTotal = item.precio * item.cantidad;
+                total += itemTotal;
+
+                const checkoutItem = document.createElement('div');
+                checkoutItem.className = 'checkout-item';
+                checkoutItem.innerHTML = `
+                        <span>${item.nombre} x${item.cantidad}</span>
+                        <span>$${itemTotal.toFixed(2)}</span>
+                    `;
+                checkoutSummary.appendChild(checkoutItem);
+            });
+
+            // Agregar el total
+            const divider = document.createElement('div');
+            divider.className = 'checkout-divider';
+            checkoutSummary.appendChild(divider);
+
+            const totalElement = document.createElement('div');
+            totalElement.className = 'checkout-total';
+            totalElement.innerHTML = `
+                    <strong>Total: $<span id="checkout-total">${total.toFixed(2)}</span></strong>
+                `;
+            checkoutSummary.appendChild(totalElement);
+        }
+
+        // Funciones para extras
+        function loadExtras() {
+            fetch('/api/platos/extras')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error al cargar extras');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    extras = data;
+                    renderExtras();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function renderExtras() {
+            const extrasContainer = document.getElementById('extras-container');
+            extrasContainer.innerHTML = '';
+
+            extras.forEach(extra => {
+                const extraItem = document.createElement('div');
+                extraItem.className = 'extra-item';
+                extraItem.innerHTML = `
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="extras" value="${extra.id}"
+                                   id="extra${extra.id}" data-precio="${extra.precio}" onchange="handleExtraSelection(this)">
+                            <label class="form-check-label" for="extra${extra.id}">
+                                ${extra.nombre} - $${extra.precio.toFixed(2)}
+                            </label>
+                        </div>
+                    `;
+                extrasContainer.appendChild(extraItem);
+            });
+        }
+
+        function handleExtraSelection(checkbox) {
+            const checkedCount = document.querySelectorAll('input[name="extras"]:checked').length;
+
+            if (checkedCount > maxExtras) {
+                checkbox.checked = false;
+                alert(`Solo puedes seleccionar hasta ${maxExtras} extras`);
+                return;
+            }
+
+            updateCheckoutSummary();
+        }
+
+        // Funciones para geolocalizacion
+        function initGeolocation() {
+            const geolocationBtn = document.getElementById('geolocation-btn');
+            const ubicacionInput = document.getElementById('ubicacion');
+
+            if (geolocationBtn && ubicacionInput) {
+                geolocationBtn.addEventListener('click', function () {
+                    if (!navigator.geolocation) {
+                        alert('La geolocalizacion no es compatible con tu navegador');
+                        return;
+                    }
+
+                    geolocationBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Obteniendo...';
+                    geolocationBtn.disabled = true;
+
+                    obtenerDireccionSimple(
+                        function (direccion) {
+                            ubicacionInput.value = direccion;
+                            geolocationBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Obtener Ubicacion';
+                            geolocationBtn.disabled = false;
+                        },
+                        function (error) {
+                            alert('Error al obtener la ubicacion: ' + error);
+                            geolocationBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Obtener Ubicacion';
+                            geolocationBtn.disabled = false;
+                        }
+                    );
+                });
+            }
+        }
+
+        function obtenerDireccionSimple(callbackExito, callbackError) {
+            if (!navigator.geolocation) {
+                if (callbackError) {
+                    callbackError('Geolocalizacion no es soportada por este navegador');
+                }
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+
+                    reverseGeocoding(lat, lng, function (direccion) {
+                        if (callbackExito) {
+                            callbackExito(direccion.direccionCompleta);
+                        }
+                    }, function (error) {
+                        if (callbackError) {
+                            callbackError('Error al obtener direccion: ' + error);
+                        }
+                    });
+                },
+                function (error) {
+                    let mensajeError = '';
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            mensajeError = 'Permiso de ubicacion denegado por el usuario';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            mensajeError = 'Informacion de ubicacion no disponible';
+                            break;
+                        case error.TIMEOUT:
+                            mensajeError = 'Tiempo de espera para obtener ubicacion agotado';
+                            break;
+                        default:
+                            mensajeError = 'Error desconocido al obtener ubicacion';
+                    }
+
+                    if (callbackError) {
+                        callbackError(mensajeError);
+                    }
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 60000
+                }
+            );
+        }
+
+        function reverseGeocoding(lat, lng, exito, error) {
+            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.setRequestHeader('Accept', 'application/json');
+
+            xhr.onload = function () {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+
+                        if (data.error) {
+                            if (error) {
+                                error(data.error.message || 'Error en el servidor');
+                            }
+                            return;
+                        }
+
+                        const direccion = {
+                            direccionCompleta: data.display_name || '',
+                            calle: (data.address && data.address.road) || '',
+                            numero: (data.address && data.address.house_number) || '',
+                            ciudad: (data.address && (data.address.city || data.address.town || data.address.village)) || '',
+                            codigoPostal: (data.address && data.address.postcode) || '',
+                            pais: (data.address && data.address.country) || '',
+                            coordenadas: { lat: lat, lng: lng }
+                        };
+
+                        if (exito) {
+                            exito(direccion);
+                        }
+                    } catch (e) {
+                        if (error) {
+                            error('Error al procesar la respuesta: ' + e.message);
+                        }
+                    }
+                } else {
+                    if (error) {
+                        error('Error HTTP: ' + xhr.status);
+                    }
+                }
+            };
+
+            xhr.onerror = function () {
+                if (error) {
+                    error('Error de conexion');
+                }
+            };
+
+            xhr.ontimeout = function () {
+                if (error) {
+                    error('Tiempo de espera agotado');
+                }
+            };
+
+            xhr.timeout = 10000;
+            xhr.send();
+        }
+
+        // Funciones para el formulario de checkout
+        function setupCheckoutForm() {
+            const checkoutForm = document.getElementById('checkout-form');
+
+        if (checkoutForm) {
+            checkoutForm.addEventListener('submit', async function (e) {
             e.preventDefault();
-            window.location.href = "{{ url_for('carrito') }}";
+
+    // Obtener todos los elementos del formulario
+    const formElements = this.elements;
+    const formData = {};
+
+    // Recorrer todos los elementos y obtener sus valores
+    for (let i = 0; i < formElements.length; i++) {
+        const element = formElements[i];
+        
+        // Solo incluir elementos con name y que no sean botones
+        if (element.name && element.type !== 'submit' && element.type !== 'button') {
+            if (element.type === 'checkbox') {
+                formData[element.name] = element.checked;
+            } else if (element.type === 'radio') {
+                if (element.checked) {
+                    formData[element.name] = element.value;
+                }
+            } else if (element.type === 'select-multiple') {
+                formData[element.name] = Array.from(element.selectedOptions).map(option => option.value);
+            } else {
+                formData[element.name] = element.value;
+                    }
+                }
+            }
+
+            try {
+                const response = await fetch('/realizar_pedido', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ "carrito": localStorage.getItem("carrito"), "form": formData })
+                });
+
+                if (response.ok) {
+                    const ver_pedido = await response.text();
+                    localStorage.clear();
+                    location.href=ver_pedido
+                } else {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al procesar el pedido: ' + error.message);
+            }
         });
-    }
-}
+            }
+        }
 
+        function calcularTotalConExtras() {
+            let total = 0;
 
-    // Inicializar cuando el DOM este listo
-    document.addEventListener('DOMContentLoaded', function() {
-        initGeolocation();
+            // Sumar items del carrito
+            cart.forEach(item => {
+                total += item.precio * item.cantidad;
+            });
 
-        // Inicializar el calculo del total
-        calculateTotalWithExtras();
+            // Sumar extras seleccionados
+            document.querySelectorAll('input[name="extras"]:checked').forEach(checkbox => {
+                total += parseFloat(checkbox.dataset.precio);
+            });
 
-        inicializarCarrito();
-        actualizarTotalCarrito();
-    });
+            return total;
+        }
 
+        // Funciones auxiliares
+        function updateCartCounter() {
+            const totalItems = cart.reduce((total, item) => total + item.cantidad, 0);
 
-document.addEventListener('visibilitychange', function() {
-    if (!document.hidden) {
-        actualizarCarrito();
-        actualizarTotalCarrito();
-    }
-});
+            // Actualizar contador en la interfaz si existe
+            const cartCounter = document.getElementById('cart-counter');
+            if (cartCounter) {
+                cartCounter.textContent = totalItems;
+                cartCounter.style.display = totalItems > 0 ? 'inline-block' : 'none';
+            }
+        }
 
-window.addEventListener('storage', function(e) {
-    if (e.key === 'carrito') {
-        actualizarCarrito();
-        actualizarTotalCarrito();
-    }
-});
-</script>
-{% endblock %}
+        function mostrarNotificacion(mensaje) {
+            // Eliminar notificacion anterior si existe
+            const notificacionAnterior = document.getElementById('cart-notification');
+            if (notificacionAnterior) {
+                notificacionAnterior.remove();
+            }
+
+            // Crear nueva notificacion
+            const notificacion = document.createElement('div');
+            notificacion.id = 'cart-notification';
+            notificacion.textContent = mensaje;
+            document.body.appendChild(notificacion);
+
+            // Mostrar notificacion
+            setTimeout(() => {
+                notificacion.style.transform = 'translateX(0)';
+            }, 10);
+
+            // Ocultar despues de 3 segundos
+            setTimeout(() => {
+                notificacion.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notificacion.parentNode) {
+                        notificacion.parentNode.removeChild(notificacion);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // Inicializar cuando el DOM este listo
+        document.addEventListener('DOMContentLoaded', function () {
+            loadCart();
+            loadExtras();
+            initGeolocation();
+            setupCheckoutForm();
+        });
+    </script>
+</body>
+</html>

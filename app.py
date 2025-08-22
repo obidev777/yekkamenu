@@ -31,6 +31,17 @@ class Configuracion(db.Model):
     logo = db.Column(db.String(200), default="logo.png")
     impuesto = db.Column(db.Float, default=0.0)
     max_extras = db.Column(db.Integer, default=5)
+    
+    def to_json(self):
+        return {
+            'id': self.id,
+            'nombre_restaurante': self.nombre_restaurante,
+            'telefono': self.telefono,
+            'direccion': self.direccion,
+            'logo': self.logo,
+            'impuesto': self.impuesto,
+            'max_extras': self.max_extras
+        }
 
 class Categoria(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -38,6 +49,15 @@ class Categoria(db.Model):
     descripcion = db.Column(db.Text)
     activa = db.Column(db.Boolean, default=True)
     platos = db.relationship('Plato', backref='categoria_obj', lazy=True)
+    
+    def to_json(self):
+        return {
+            'id': self.id,
+            'nombre': self.nombre,
+            'descripcion': self.descripcion,
+            'activa': self.activa,
+            'platos_count': len(self.platos) if self.platos else 0
+        }
 
 class Producto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -47,6 +67,17 @@ class Producto(db.Model):
     cantidad = db.Column(db.Float, nullable=False)
     activo = db.Column(db.Boolean, default=True)
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_json(self):
+        return {
+            'id': self.id,
+            'nombre': self.nombre,
+            'precio_compra': self.precio_compra,
+            'unidad_medida': self.unidad_medida,
+            'cantidad': self.cantidad,
+            'activo': self.activo,
+            'fecha_creacion': self.fecha_creacion.isoformat() if self.fecha_creacion else None
+        }
 
 class Plato(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -58,6 +89,19 @@ class Plato(db.Model):
     categoria_id = db.Column(db.Integer, db.ForeignKey('categoria.id'))
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
     ingredientes = db.relationship('IngredientePlato', backref='plato', lazy=True)
+    
+    def to_json(self):
+        return {
+            'id': self.id,
+            'nombre': self.nombre,
+            'descripcion': self.descripcion,
+            'precio_venta': self.precio_venta,
+            'imagen': self.imagen,
+            'activo': self.activo,
+            'categoria_id': self.categoria_id,
+            'fecha_creacion': self.fecha_creacion.isoformat() if self.fecha_creacion else None,
+            'ingredientes': [ingrediente.to_json() for ingrediente in self.ingredientes] if self.ingredientes else []
+        }
 
 class IngredientePlato(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -65,12 +109,29 @@ class IngredientePlato(db.Model):
     producto_id = db.Column(db.Integer, db.ForeignKey('producto.id'), nullable=False)
     cantidad = db.Column(db.Float, nullable=False)
     producto = db.relationship('Producto', backref='ingredientes')
+    
+    def to_json(self):
+        return {
+            'id': self.id,
+            'plato_id': self.plato_id,
+            'producto_id': self.producto_id,
+            'cantidad': self.cantidad,
+            'producto': self.producto.to_json() if self.producto else None
+        }
 
 class Extra(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
     precio = db.Column(db.Float, nullable=False)
     activo = db.Column(db.Boolean, default=True)
+    
+    def to_json(self):
+        return {
+            'id': self.id,
+            'nombre': self.nombre,
+            'precio': self.precio,
+            'activo': self.activo
+        }
 
 class Pedido(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -84,6 +145,21 @@ class Pedido(db.Model):
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
     items = db.relationship('ItemPedido', backref='pedido', lazy=True)
     extras = db.relationship('ExtraPedido', backref='pedido', lazy=True)
+    
+    def to_json(self):
+        return {
+            'id': self.id,
+            'codigo': self.codigo,
+            'cliente_nombre': self.cliente_nombre,
+            'cliente_telefono': self.cliente_telefono,
+            'cliente_direccion': self.cliente_direccion,
+            'cliente_ubicacion': self.cliente_ubicacion,
+            'estado': self.estado,
+            'total': self.total,
+            'fecha_creacion': self.fecha_creacion.isoformat() if self.fecha_creacion else None,
+            'items': [item.to_json() for item in self.items] if self.items else [],
+            'extras': [extra.to_json() for extra in self.extras] if self.extras else []
+        }
 
 class ItemPedido(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -93,6 +169,17 @@ class ItemPedido(db.Model):
     precio_unitario = db.Column(db.Float, nullable=False)
     personalizaciones = db.Column(db.Text)  # JSON con personalizaciones
     plato = db.relationship('Plato', backref='pedidos')
+    
+    def to_json(self):
+        return {
+            'id': self.id,
+            'pedido_id': self.pedido_id,
+            'plato_id': self.plato_id,
+            'cantidad': self.cantidad,
+            'precio_unitario': self.precio_unitario,
+            'personalizaciones': self.personalizaciones,
+            'plato': self.plato.to_json() if self.plato else None
+        }
 
 class ExtraPedido(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -101,6 +188,16 @@ class ExtraPedido(db.Model):
     cantidad = db.Column(db.Integer, nullable=False)
     precio_unitario = db.Column(db.Float, nullable=False)
     extra = db.relationship('Extra', backref='pedidos')
+    
+    def to_json(self):
+        return {
+            'id': self.id,
+            'pedido_id': self.pedido_id,
+            'extra_id': self.extra_id,
+            'cantidad': self.cantidad,
+            'precio_unitario': self.precio_unitario,
+            'extra': self.extra.to_json() if self.extra else None
+        }
 
 class Usuario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -113,6 +210,14 @@ class Usuario(db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+    def to_json(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'rol': self.rol
+            # No incluimos el password_hash por seguridad
+        }
 
 # Decorador para requerir login
 def login_required(f):
@@ -174,8 +279,9 @@ def index():
     categorias = Categoria.query.all()
     query:Plato = Plato.query.filter(Plato.activo == True)
     if categoria_id:
-        cat:Categoria = Categoria.query.filter(id=categoria_id)
-        query.categoria_nombre = cat.nombre
+        try:
+            query.categoria = Categoria.query.filter(id=categoria_id)
+        except:pass
         query = query.filter(Plato.categoria_id == categoria_id)
     if search:
         query = query.filter(Plato.nombre.ilike(f'%{search}%'))
@@ -194,6 +300,44 @@ def index():
                              categoria_actual=categoria_id,
                              search=search)
     return render_template('index.html', categorias=categorias, platos=platos, config=config)
+
+# Rutas principales
+@app.route('/api/categorias')
+def api_categorias():
+    categorias = Categoria.query.all()
+    cats = []
+    for c in categorias:
+        cats.append(c.to_json())
+    return jsonify(cats)
+
+# Rutas principales
+@app.route('/api/platos/extras')
+def api_extras():
+    extras = Extra.query.filter_by(activo=True).all()
+    cats = []
+    for c in extras:
+        cats.append(c.to_json())
+    return jsonify(cats)
+
+# Rutas principales
+@app.route('/api/platos')
+def api_platos():
+    categoria_id = request.args.get('categoria_id', type=int)
+    search = request.args.get('search', '')
+    categorias = Categoria.query.all()
+    query:Plato = Plato.query.filter(Plato.activo == True)
+    if categoria_id:
+        try:
+            query.categoria = Categoria.query.filter(id=categoria_id)
+        except:pass
+        query = query.filter(Plato.categoria_id == categoria_id)
+    if search:
+        query = query.filter(Plato.nombre.ilike(f'%{search}%'))
+    platos = query.all()
+    plats = []
+    for p in platos:
+        plats.append(p.to_json())
+    return jsonify(plats)
 
 @app.route('/menu')
 def menu():
@@ -278,15 +422,16 @@ def carrito():
 
 @app.route('/realizar_pedido', methods=['POST'])
 def realizar_pedido():
-    if 'carrito' not in session or len(session['carrito']) == 0:
-        flash('El carrito está vacío.', 'error')
-        return redirect(url_for('carrito'))
-    
     # Obtener datos del cliente
-    telefono = request.form.get('telefono')
-    direccion = request.form.get('direccion')
-    ubicacion = request.form.get('ubicacion')
-    nombre = request.form.get('nombre', 'Cliente')
+    session = request.get_json()
+    session['carrito'] = json.loads(session['carrito'])
+    print(session)
+    datos_pedido = session['form']
+
+    telefono = datos_pedido.get('telefono')
+    direccion = datos_pedido.get('direccion')
+    ubicacion = datos_pedido.get('ubicacion')
+    nombre = datos_pedido.get('nombre', 'Cliente')
     
     if not telefono or not direccion:
         flash('Por favor, complete todos los campos obligatorios.', 'error')
@@ -324,7 +469,7 @@ def realizar_pedido():
     for item in session['carrito']:
         nuevo_item = ItemPedido(
             pedido_id=nuevo_pedido.id,
-            plato_id=item['plato_id'],
+            plato_id=item['id'],
             cantidad=item['cantidad'],
             precio_unitario=item['precio'],
             personalizaciones=json.dumps(item.get('personalizaciones', {}))
@@ -352,8 +497,7 @@ def realizar_pedido():
     session['cliente_direccion'] = direccion
     session['cliente_nombre'] = nombre
     
-    flash(f'Pedido realizado con éxito. Su código de pedido es: {codigo_pedido}', 'success')
-    return redirect(url_for('confirmacion_pedido', codigo=codigo_pedido))
+    return f'/confirmacion_pedido/{codigo_pedido}',200
 
 @app.route('/confirmacion_pedido/<codigo>')
 def confirmacion_pedido(codigo):
@@ -956,7 +1100,18 @@ def api_carrito():
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+# Inicializar la base de datos y crear usuario admin por defecto
+@app.before_first_request
+def inicializar_base_datos():
+    db.create_all()
+    
+    # Crear usuario admin por defecto si no existe
+    if not Usuario.query.filter_by(username='admin').first():
+        admin = Usuario(username='admin')
+        admin.set_password('admin123')
+        db.session.add(admin)
+        db.session.commit()
+        print("Usuario admin creado: admin / admin123")
 
 if __name__ == '__main__':
-
     app.run(debug=True,port=443)
